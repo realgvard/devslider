@@ -913,6 +913,7 @@
             slider.container.empty().append(slider.slides);
           }
         }
+
         // INFINITE LOOP && !CAROUSEL:
         if (slider.vars.animationLoop && !carousel) {
           slider.cloneCount = 2;
@@ -925,6 +926,7 @@
         slider.newSlides = $(slider.vars.selector, slider);
 
         sliderOffset = (reverse) ? slider.count - 1 - slider.currentSlide + slider.cloneOffset : slider.currentSlide + slider.cloneOffset;
+
         // VERTICAL:
         if (vertical && !carousel) {
           slider.container.height((slider.count + slider.cloneCount) * 200 + "%").css("position", "absolute").width("100%");
@@ -945,7 +947,7 @@
           }, (type === "init") ? 100 : 0);
         }
       } else { // FADE:
-        slider.slides.css({"width": "100%", "float": "left", "marginRight": "-100%", "position": "relative"});
+      slider.slides.css({"width": "100%", "float": "left", "marginRight": "-100%", "position": "relative"});
         if (type === "init") {
           if (!touch) {
             //slider.slides.eq(slider.currentSlide).fadeIn(slider.vars.animationSpeed, slider.vars.easing);
@@ -1085,6 +1087,7 @@
 
     //FlexSlider: Initialize
     methods.init();
+    console.log(slider);
   };
 
   // Ensure the slider isn't focussed if the window loses focus.
@@ -1116,10 +1119,10 @@
     // Usability features
     pauseOnAction: true,            //Boolean: Pause the slideshow when interacting with control elements, highly recommended.
     pauseOnHover: false,            //Boolean: Pause the slideshow when hovering over slider, then resume when no longer hovering
-    pauseInvisible: true,   		//{NEW} Boolean: Pause the slideshow when tab is invisible, resume when visible. Provides better UX, lower CPU usage.
-    useCSS: true,                   //{NEW} Boolean: Slider will use CSS3 transitions if available
-    touch: true,                    //{NEW} Boolean: Allow touch swipe navigation of the slider on touch-enabled devices
-    video: false,                   //{NEW} Boolean: If using video in the slider, will prevent CSS3 3D Transforms to avoid graphical glitches
+    pauseInvisible: true,           // {NEW} Boolean: Pause the slideshow when tab is invisible, resume when visible. Provides better UX, lower CPU usage.
+    useCSS: true,                   // {NEW} Boolean: Slider will use CSS3 transitions if available
+    touch: true,                    // {NEW} Boolean: Allow touch swipe navigation of the slider on touch-enabled devices
+    video: false,                   // {NEW} Boolean: If using video in the slider, will prevent CSS3 3D Transforms to avoid graphical glitches
 
     // Primary Controls
     controlNav: true,               //Boolean: Create navigation for paging control of each slide? Note: Leave true for manualControls usage
@@ -1156,7 +1159,7 @@
     after: function(){},            //Callback: function(slider) - Fires after each slider animation completes
     end: function(){},              //Callback: function(slider) - Fires when the slider reaches the last slide (asynchronous)
     added: function(){},            //{NEW} Callback: function(slider) - Fires after a slide is added
-    removed: function(){},           //{NEW} Callback: function(slider) - Fires after a slide is removed
+    removed: function(){},          //{NEW} Callback: function(slider) - Fires after a slide is removed
     init: function() {}             //{NEW} Callback: function(slider) - Fires after the slider is initially setup
   };
 

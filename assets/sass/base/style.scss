@@ -3,6 +3,11 @@ body {
   padding: 0;
 }
 
+.dev-wrapper {
+  width: 1000px;
+  margin: 0 auto;
+}
+
 .devslider-container {
   width: 1300px;
   overflow: hidden;
@@ -10,7 +15,7 @@ body {
   position: relative;
 }
 
-.devslider {
+.my-slider {
 
   img {
     max-width: 100%;
