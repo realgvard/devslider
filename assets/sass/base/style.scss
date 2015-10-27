@@ -1,0 +1,160 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.devslider-container {
+  width: 1300px;
+  overflow: hidden;
+  margin: 0 auto;
+  position: relative;
+}
+
+.devslider {
+
+  img {
+    max-width: 100%;
+  }
+
+  li {
+    display: none;
+
+    &:first-child {
+      display: block;
+    }
+
+  }
+
+}
+
+.slides,
+.slides > li,
+.devslider-control-nav,
+.devslider-direction-nav {
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+}
+
+//
+// Direction Nav
+//
+
+.devslider-direction-nav {
+
+  *height: 0;
+
+
+  //
+  // Global styles
+  //
+
+  a  {
+
+    text-decoration: none;
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0;
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    // overflow: hidden;
+    // opacity: 0;
+    cursor: pointer;
+    background: red;
+    color: white;
+
+    &:hover {
+      background: blue;
+    }
+
+    &:before  {
+
+      font-family: "@{font-name}";
+      font-size: 40px;
+      display: inline-block;
+
+    }
+
+    &.devslider-next:before {
+
+      // content: 'go !';
+
+    }
+
+  }
+
+
+  //
+  // Prev
+  //
+
+  .devslider-prev {
+
+    left: 0;
+
+  }
+
+
+  //
+  // Next
+  //
+
+  .devslider-next {
+
+    right: 0;
+    text-align: right;
+
+  }
+
+
+  //
+  // Hover states
+  //
+
+  .flexslider:hover &{
+
+    .flex-prev {
+
+      opacity: 0.7;
+      left: 10px;
+
+      &:hover{
+
+        opacity: 1;
+
+      }
+
+    }
+
+    .flex-next {
+
+      opacity: 0.7;
+      right: 10px;
+
+      &:hover{
+
+        opacity: 1;
+
+      }
+
+    }
+
+  }
+
+
+  //
+  // Disabled
+  //
+
+  .devslider-disabled {
+
+    opacity: 0!important;
+    filter: alpha(opacity=0);
+    cursor: default;
+
+  }
+}
