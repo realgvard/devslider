@@ -38,10 +38,10 @@
                 slider.slides = $(settings.slideSelector, slider);
                 slider.count = slider.slides.length;
 
-                slider.setup();
 
-                // INIT
-                settings.init();
+                // API: Before init - Callback
+                settings.devBeforeInit();
+
 
                 wrapUp.setup();
 
@@ -57,12 +57,14 @@
 
                 slider.before( slider.wrapper );
                 slider.viewport.append( slider );
-                slider.viewport.addClass(shortNamespace + 'slider-initialised');
 
-                // ****************
-                // ** AFTERINIT **
-                // ****************
-                settings.afterInit();
+                slider.setup();
+                slider.setActive();
+
+
+                slider.viewport.addClass(shortNamespace + 'slider-initialised');
+                // API: After init - Callback
+                settings.devAfterInit();
 
                 // console.log(
                 //     slider.wrapper,
@@ -85,13 +87,16 @@
             $(settings.slideSelector, slider)
                 .css({
                     'float': 'left',
-                    'width': '100%',
-                    'height': '100%',
+                    'width': slider.width(),
+                    // 'height': '100%',
                     'display': 'block'
                 });
+
+            slider.css('width', (100 * slider.count) + '%');
         };
 
         slider.setActive = function() {
+            this.startAt
 
         };
 
@@ -104,13 +109,13 @@
                     $('<div class="' + settings.namespace + 'viewport"></div>');
 
                 // Set private context
-                slider.wrapper.css({
+                // slider.wrapper.add(slider.viewport).css({
+                slider.viewport.css({
                                 "overflow": "hidden",
                                 "position": "relative"
                             });
 
                 slider.wrapper.append( slider.viewport );
-                // slider.wrapper.insertBefore( slider ).append( slider.viewport );
             },
 
             update: function() {
@@ -120,18 +125,25 @@
 
         var directionNav = {
             setup: function() {
-                slider.directionNav =   $('<ul class="' + settings.namespace + 'direction-nav">' +
-                                            '<li>' +
-                                                '<a class="' + settings.namespace + 'nav-prev" href="#">' +
-                                                    settings.prevText +
-                                                '</a>' +
-                                            '</li>' +
-                                            '<li>' +
-                                                '<a class="' + settings.namespace + 'nav-next" href="#">' +
-                                                    settings.nextText +
-                                                '</a>' +
-                                            '</li>' +
-                                        '</ul>');
+                slider.directionNav = $('<ul class="' + settings.namespace + 'direction-nav">' +
+                                          '<li>' +
+                                              '<a class="' + settings.namespace + 'nav-prev" href="#">' +
+                                                  settings.prevText +
+                                              '</a>' +
+                                          '</li>' +
+                                          '<li>' +
+                                              '<a class="' + settings.namespace + 'nav-next" href="#">' +
+                                                  settings.nextText +
+                                              '</a>' +
+                                          '</li>' +
+                                      '</ul>');
+
+                $(slider.directionNav).on('click', function( event ) {
+                    event.preventDefault();
+
+                    console.log('hola');
+
+                });
 
                 slider.wrapper.append( slider.directionNav );
             },
@@ -175,23 +187,27 @@
         paginationNav: true,
         prevText: 'Prev',
         nextText: 'Next',
-        afterInit: function() {},
-        beforeInit: function() {},
-        init: function() {}
+        devAfterSlide: function() {},
+        devBeforeSlide: function() {},
+        devBeforeInit: function() {},
+        devAfterInit: function() {}
     };
 
-})( jQuery, window, document );
+})( jQuery, window, document, undefined );
 
 
 $('.my-slider').deviora({
   delay: 8000,
   startAt: 1,
-  init: function() {
-    console.info('init');
+  directionNav: true,
+  paginationNav: true,
+
+  devBeforeSlide: function() {
+    console.info('devBeforeSlide');
   },
 
-  afterInit: function() {
-    console.info('after init');
+  devAfterInit: function() {
+    console.info('devAfterInit');
   }
 });
 
