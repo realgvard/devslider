@@ -1,7 +1,7 @@
 # Custom path #
 ###################
 /node_modules
-/sandbox/vendor
+/lab
 
 
 # Compiled source #
