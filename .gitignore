@@ -1,6 +1,7 @@
 # Custom path #
 ###################
 /node_modules
+/sandbox/vendor
 
 
 # Compiled source #

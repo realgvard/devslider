@@ -193,7 +193,7 @@
         devAfterInit: function() {}
     };
 
-})( jQuery, window, document, undefined );
+})(jQuery, window, document, undefined);
 
 
 $('.my-slider').deviora({
