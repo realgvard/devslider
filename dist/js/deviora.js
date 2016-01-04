@@ -4,12 +4,16 @@
 
 
 ;(function ( $, window, document, undefined ) {
-    function slider( container, settings ) {
-        var slider = $(container);
+    $.deviora = function( element, options ) {
+        var slider = $(element);
 
-        // Deviora: default settings
+        // Make public options
+        slider.options =  $.extend( {}, $.fn.deviora.defaults, options );
+        slider.userOptions = options;
+
+        // Deviora: default slider.options
         var version = '1.0.0',
-            namespace = settings.namespace,
+            namespace = slider.options.namespace,
             shortNamespace = namespace.replace(/[-|\s]+$/g, ''),
             eventType = "click touchend MSPointerUp keyup",
             msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
@@ -24,15 +28,15 @@
             init: function() {
 
                 // Get current slide and make sure it is a number
-                slider.currentItem = parseInt(settings.startAt ? settings.startAt : 0, 10);
-                slider.prevItem = slider.currentItem;
+                slider.currentSlide = parseInt(slider.options.startAt ? slider.options.startAt : 0, 10);
+                if ( isNaN( slider.currentSlide ) ) { slider.currentSlide = 0; }
+                slider.prevItem = slider.currentSlide;
 
-                // slider.containerSelector = settings.slideSelector.substr(0, settings.slideSelector.search(' '));
-                slider.$slides = $(settings.slideSelector, slider);
+                // slider.containerSelector = slider.options.slideSelector.substr(0, slider.options.slideSelector.search(' '));
+                slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
                 slider.startTimeout = null;
-                slider.speed = settings.speed;
                 slider.animating = false;
 
 
@@ -63,64 +67,66 @@
                     if (supportedProp) {
                         return true;
                     } else {
-                        slider.css2 = 'marginLeft';
                         return false;
                     }
                 })();
-                // slider.animationEnd = (slider.pfx) ? slider.pfx + 'AnimationEnd' : 'animationend';
 
-                console.log(slider, $.data('devslider'));
                 // API: Before init - Callback
-                settings.devBeforeInit();
+                slider.options.devBeforeInit();
 
-                slider.wrapup.setup();
+                // Start build shell slider
+                slider.shell.wrapup();
 
                 // DirectionNav:
-                if (settings.directionNav) methods.directionNav.setup();
+                if (slider.options.directionNav) methods.directionNav.setup();
 
                 // ControlNav:
-                if (settings.paginationNav) methods.paginationNav.setup();
+                if (slider.options.paginationNav) methods.paginationNav.setup();
 
+                // Append collection build items
                 slider.before( slider.$wrapper );
+                // Append slider to collection
                 slider.$viewport.append( slider );
+                // End build shell slider
 
-                slider.setup();
+                slider.shell.setup();
+                // Set active slide
                 slider.setActive();
 
+                console.log(slider);
 
                 slider.$viewport.addClass(shortNamespace + 'slider-initialised');
+
                 // API: After init - Callback
-                settings.devAfterInit();
+                slider.options.devAfterInit();
             },
 
             directionNav: {
                 setup: function() {
-                    var directionNavScaffold =
+                    var $directionNavScaffold =
                         $('<ul class="' + namespace + 'direction-nav">' +
                             '<li class="' + namespace + 'nav-prev">' +
                                 '<a class="' + namespace + 'prev" href="#">' +
-                                    (settings.navigationText[0] || '') +
+                                    (slider.options.navigationText[0] || '') +
                                 '</a>' +
                             '</li>' +
                             '<li class="' + namespace + 'nav-next">' +
                                 '<a class="' + namespace + 'next" href="#">' +
-                                    (settings.navigationText[1] || '') +
+                                    (slider.options.navigationText[1] || '') +
                                 '</a>' +
                             '</li>' +
                         '</ul>');
 
-                    slider.$wrapper.append( directionNavScaffold );
+                    slider.$wrapper.append( $directionNavScaffold );
                     slider.$directionNav = $('.' + namespace + 'direction-nav li a', slider.$wrapper);
 
-                    $(slider.$directionNav).on(eventType, function( event ) {
+                    slider.$directionNav.on(eventType, function( event ) {
                         event.preventDefault();
                         var target;
 
                         target = ( $(this).hasClass(namespace + 'prev') ) ? slider.getIndexCalcDir('prev') : slider.getIndexCalcDir('next');
 
-                        slider.animationStore.doAnimation({currentItem: target});
-
-
+                        slider.animationStore.doAnimation({currentSlide: target});
                     });
 
 
@@ -133,23 +139,51 @@
 
             paginationNav: {
                 setup: function() {
-                    var fragment = document.createDocumentFragment(),
-                        $list = $('<ol class="' + namespace + 'pagination-nav"></ol>');
+                    var $controlPagScaffold = $('<ol class="' + namespace + 'pagination-nav"></ol>');
 
                     if (slider.count > 1) {
                         for (var i = 0, len = slider.count; i < len; i++) {
-                            var newItem = $('<li><a href="#">' + i + '</a></li>').get(0);
-                            fragment.appendChild(newItem);
+                            var $pagItem = $('<li>', {
+                                'class': namespace + 'bullet',
+                                'html': function() {
+                                    var $pagButton = $('<a href="#">' + i + '</a>');
+                                    $pagButton.data(namespace + 'bullet', i);
+                                    return $pagButton;
+                                }
+                            });
+
+                            $controlPagScaffold.append( $pagItem );
                         }
                     }
 
                     // Append all items
-                    $list[0].appendChild(fragment);
+                    slider.$paginationNav = $controlPagScaffold;
 
-                    slider.$paginationNav = $list;
+                    slider.$paginationNav.on(eventType, 'a', function( event ) {
+                        event.preventDefault();
+                        var $this = $(this),
+                            target = $this.data(namespace + 'bullet');
+
+                        if(target != slider.currentSlide) {
+                            slider.animationStore.doAnimation({currentSlide: target});
+                        }
+                    });
+
                     slider.$wrapper.append( slider.$paginationNav );
                 },
-                update: function() {}
+
+                update: function() {
+                    for (var i = 0, len = slider.count; i < len; i++) {
+                        $('.' + namespace + 'pagination-nav li a', slider.$wrapper).data(namespace + 'bullet', i);
+                    }
+                },
+
+                setActive: function() {
+                    if (slider.prevItem != slider.currentSlide) {
+                        slider.$paginationNav.children().eq(slider.prevItem).removeClass(namespace + 'active');
+                    }
+                    slider.$paginationNav.children().eq(slider.currentSlide).addClass(namespace + 'active');
+                }
             },
 
             next: function() {},
@@ -160,24 +194,25 @@
         /*------------------------------------*\
           - METHODS -
         \*------------------------------------*/
-        slider.setup = function() {
-            slider.addClass(namespace + 'slides');
-
-            $(settings.slideSelector, slider)
-                .css({
-                    'float': 'left',
-                    'width': slider.width(),
-                    'display': 'block'
-                });
-
-            slider.css({
-                'width': (100 * slider.count) + '%'
-            });
-        };
-
-        // Build our slider with HTML
-        slider.wrapup = {
+        slider.shell = {
+            // Setup default styles
             setup: function() {
+                //slider.addClass(namespace + 'slides');
+
+                $(slider.options.slideSelector, slider)
+                    .css({
+                        'float': 'left',
+                        'width': slider.width(),
+                        'display': 'block'
+                    });
+
+                slider.css({
+                    'width': (100 * slider.count) + '%'
+                });
+            },
+
+            // Build our slider with HTML
+            wrapup: function() {
                 slider.$wrapper =
                     $('<div class="' + namespace + 'wrapper"></div>');
                 slider.$viewport =
@@ -185,27 +220,33 @@
 
                 // Set private context
                 slider.$viewport.css({
-                                "overflow": "hidden",
-                                "position": "relative"
-                            });
+                    'overflow': 'hidden',
+                    'position': 'relative'
+                });
 
                 slider.$wrapper.append( slider.$viewport );
             },
 
-            update: function() {
-
+            setActive: function () {
+                if (slider.prevItem != slider.currentSlide) {
+                    $(slider.options.slideSelector, slider).eq(slider.prevItem).removeClass(namespace + 'active-slide');
+                }
+                $(slider.options.slideSelector, slider).eq(slider.currentSlide).addClass(namespace + 'active-slide');
             }
         };
 
-        // Group type animation in on object
+        // Group animations in one object
         slider.animationStore = {
-            slideSingleItem: function(currentItem) {
+            slideSingleItem: function(currentSlide) {
                 var widthViewport = slider.width() / slider.count,
-                    origin = -(widthViewport * currentItem) + 'px';
+                    origin = -(widthViewport * currentSlide) + 'px';
 
-                if (slider.animating == false) {
-                    slider.prevItem = slider.currentItem;
-                    slider.currentItem = currentItem;
+                if (slider.animating === false) {
+                    // API: Before slide - Callback
+                    slider.options.devBeforeSlide();
+
+                    slider.prevItem = slider.currentSlide;
+                    slider.currentSlide = currentSlide;
                     slider.animating = true;
 
                     if (slider.transitions) {
@@ -214,20 +255,26 @@
                             CSS3Transform = pfxCSS3 + 'transform',
                             transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
-                        slider.css(CSS3Transition, 'transform ' + slider.speed + 'ms');
+                        slider.css(CSS3Transition, 'transform ' + slider.options.speed + 'ms');
                         slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
 
                         slider.on(transitionEnd, function() {
-                            console.log('end');
+                            //console.log('end');
                             slider.setActive();
                             slider.animating = false;
                             slider.off(transitionEnd);
+
+                            // API: After slide - Callback
+                            slider.options.devAfterSlide();
                         });
                     } else {
-                        slider.animate({ 'marginLeft': origin }, slider.speed, slider.easing, function animationEnd() {
-                            console.log('end');
+                        slider.animate({ 'marginLeft': origin }, slider.options.speed, slider.easing, function animationEnd() {
+                            //console.log('end');
                             slider.setActive();
                             slider.animating = false;
+
+                            // API: After slide - Callback
+                            slider.options.devAfterSlide();
                         });
                     }
                 }
@@ -239,53 +286,79 @@
 
             // Dispatcher animationLibrary ..
             doAnimation: function(args) {
-                this.slideSingleItem(args.currentItem);
+                if(slider.options.animation === 'slide') {
+                    this.slideSingleItem(args.currentSlide);
+                } else if (slider.options.animation === 'fade') {
+                    this.fadeSingleItem(args.currentSlide);
+                }
             }
         };
 
         slider.getIndexCalcDir = function(dir) {
           slider.direction = dir;
           if (dir === 'next') {
-            return (slider.currentItem === slider.lastItem) ? 0 : slider.currentItem + 1;
+            return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
           } else {
-            return (slider.currentItem === 0) ? slider.lastItem : slider.currentItem - 1;
+            return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
           }
         };
 
         slider.setActive = function () {
-            if (slider.prevItem != slider.currentItem) {
-                $(settings.slideSelector, slider).eq(slider.prevItem).removeClass(namespace + 'active-slide');
+            slider.shell.setActive();
+
+            if (slider.options.paginationNav) {
+                methods.paginationNav.setActive();
             }
-            $(settings.slideSelector, slider).eq(slider.currentItem).addClass(namespace + 'active-slide');
-            console.log('active');
+        };
+
+        slider.publickMethods = {
+            nextSlide: function() {
+                var target = slider.getIndexCalcDir('next');
+                slider.animationStore.doAnimation({currentSlide: target});
+            },
+            prevSlide: function() {
+                var target = slider.getIndexCalcDir('prev');
+                slider.animationStore.doAnimation({currentSlide: target});
+            }
         };
 
         // Run initializer
         methods.init();
+
+        // Return methods which available user
+        return slider.publickMethods;
     }
 
     $.fn.deviora = function( options ) {
-        options = $.extend( {}, $.fn.deviora.options, options );
-
         return this.each(function () {
-            slider(this, options);
+            if (!$.hasData(this, "dev-slider-init")) {
+                $.data(this, 'dev-slider-init', true);
+
+                $.data(this, "devioraSlider", new $.deviora(this, options));
+            }
         });
     };
 
-    $.fn.deviora.options = {
+    $.fn.deviora.defaults = {
         namespace: 'dev-',                // Support type: String, Integer
-        delay: 5000,                      // Support type: Integer [0...]
-        speed: 600,                       // Support type: Integer [0...]
+        slideSelector: '> li',            // Support type: String
         animation: 'slide',               // Support type: String [slide, fade, pretty]
         easing: 'ease',                   // Support type: String
+        delay: 5000,                      // Support type: Integer [0...]
+        speed: 600,                       // Support type: Integer [0...]
         startAt: 0,                       // Support type: Integer [0...]
-        slideSelector: '> li',            // Support type: String
+
+        // Usability features
+        touch: true,                      // Support type: Bool [true, false]
+
+        // Primary Controls
         directionNav: true,               // Support type: Bool [true, false]
         paginationNav: true,              // Support type: Bool [true, false]
-        touch: true,                      // Support type: Bool [true, false]
-        navigationText: ['Prev', 'Next'], // Support type: Array
-        devAfterSlide: function() {},     // API: Callback
+        navigationText: ['Prev', 'Next'], // Support type: Array, Bool [false]
+
+        // Callback API
         devBeforeSlide: function() {},    // API: Callback
+        devAfterSlide: function() {},     // API: Callback
         devBeforeInit: function() {},     // API: Callback
         devAfterInit: function() {}       // API: Callback
     };
@@ -293,19 +366,38 @@
 })(jQuery, window, document, undefined);
 
 
-var sliders = $('.my-slider').deviora({
-  delay: 8000,
-  startAt: 0,
-  directionNav: true,
-  paginationNav: true,
+var slider = $('.my-slider').deviora({
+    delay: 8000,
+    startAt: 0,
+    directionNav: true,
+    paginationNav: true,
+    navigationText: ['prev', 'next'],
 
-  devBeforeSlide: function() {
-    // console.info('devBeforeSlide');
-  },
+    devBeforeSlide: function () {
+        //console.info('devBeforeSlide');
+    },
 
-  devAfterInit: function() {
-    // console.info('devAfterInit');
-  }
-});
+    devAfterSlide: function () {
+        //console.info('devAfterSlide');
+    },
 
-// console.log(sliders.data('devslider'));
+    devBeforeInit: function() {
+        // console.info('devBeforeSlide');
+    },
+
+    devAfterInit: function() {
+        // console.info('devAfterInit');
+    }
+}).data('devioraSlider');
+
+console.log( slider );
+
+$('#nextTo').click(function () {
+    slider.nextSlide();
+    return false;
+})
+
+$('#prevTo').click(function () {
+    slider.prevSlide();
+    return false;
+})

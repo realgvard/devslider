@@ -16,27 +16,36 @@ body {
 }
 
 .dev-viewport {
-    ul {
-        // padding: 0;
-        // margin: 0;
-        // list-style-type: none;
-    }
-}
-
-.dev-slides {
+  > ul {
     padding: 0;
     margin: 0;
     list-style-type: none;
+
+    &:after {
+      content: '.-.';
+      display: block;
+      clear: both;
+      visibility: hidden;
+      line-height: 0;
+      height: 0;
+    }
+  }
 }
 
-.dev-slides:after {
-    content: '.-.';
-    display: block;
-    clear: both;
-    visibility: hidden;
-    line-height: 0;
-    height: 0;
-}
+//.dev-slides {
+//    padding: 0;
+//    margin: 0;
+//    list-style-type: none;
+//}
+//
+//.dev-slides:after {
+//    content: '.-.';
+//    display: block;
+//    clear: both;
+//    visibility: hidden;
+//    line-height: 0;
+//    height: 0;
+//}
 
 .my-slider {
 
@@ -74,12 +83,11 @@ body {
 
   *height: 0;
 
-
   //
   // Global styles
   //
 
-  a  {
+  a {
 
     text-decoration: none;
     display: block;
@@ -99,7 +107,7 @@ body {
       background: blue;
     }
 
-    &:before  {
+    &:before {
 
       font-family: "@{font-name}";
       font-size: 40px;
@@ -115,7 +123,6 @@ body {
 
   }
 
-
   //
   // Prev
   //
@@ -125,7 +132,6 @@ body {
     left: 0;
 
   }
-
 
   //
   // Next
@@ -138,19 +144,18 @@ body {
 
   }
 
-
   //
   // Hover states
   //
 
-  .flexslider:hover &{
+  .flexslider:hover & {
 
     .flex-prev {
 
       opacity: 0.7;
       left: 10px;
 
-      &:hover{
+      &:hover {
 
         opacity: 1;
 
@@ -163,7 +168,7 @@ body {
       opacity: 0.7;
       right: 10px;
 
-      &:hover{
+      &:hover {
 
         opacity: 1;
 
@@ -173,16 +178,33 @@ body {
 
   }
 
-
   //
   // Disabled
   //
 
   .devslider-disabled {
 
-    opacity: 0!important;
+    opacity: 0 !important;
     filter: alpha(opacity=0);
     cursor: default;
 
   }
+}
+
+// *********************
+// Pagination Nav
+// *********************
+
+.dev-direction-nav {
+
+}
+
+.dev-bullet {
+
+  &.dev-active {
+    a {
+      color: #ff314f;
+    }
+  }
+
 }
