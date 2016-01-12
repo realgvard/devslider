@@ -29,15 +29,34 @@
 
                 // Get current slide and make sure it is a number
                 slider.currentSlide = parseInt(slider.options.startAt ? slider.options.startAt : 0, 10);
-                if ( isNaN( slider.currentSlide ) ) { slider.currentSlide = 0; }
+                // if ( isNaN( slider.currentSlide ) ) { slider.currentSlide = 0; }
                 slider.prevItem = slider.currentSlide;
 
                 // slider.containerSelector = slider.options.slideSelector.substr(0, slider.options.slideSelector.search(' '));
                 slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
-                slider.startTimeout = null;
+
+                slider.autoTimeout = null;
                 slider.animating = false;
+
+                slider.isPaused = false;
+                // slider.isStopped = false;
+                slider.isPlaying = false;
+
+                // console.log(slider.options);
+
+                if (slider.options.auto) {
+                    slider.autoTimeout = setInterval(slider.animateSlides, slider.options.autoDelay);
+                }
+
+                if (slider.options.pauseOnHover) {
+                    slider.hover(function onMouserEnter() {
+                        if (!slider.animating && !slider.isPaused) slider.pause();
+                    }, function onMouserLeave() {
+                        if (!slider.animating && slider.isPaused) slider.play();
+                    });
+                }
 
 
                 // Touch / UseCSS:
@@ -294,15 +313,6 @@
             }
         };
 
-        slider.getIndexCalcDir = function(dir) {
-          slider.direction = dir;
-          if (dir === 'next') {
-            return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
-          } else {
-            return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
-          }
-        };
-
         slider.setActive = function () {
             slider.shell.setActive();
 
@@ -314,12 +324,52 @@
         slider.publickMethods = {
             nextSlide: function() {
                 var target = slider.getIndexCalcDir('next');
-                slider.animationStore.doAnimation({currentSlide: target});
+                slider.animationStore.doAnimation({ currentSlide: target });
             },
             prevSlide: function() {
                 var target = slider.getIndexCalcDir('prev');
-                slider.animationStore.doAnimation({currentSlide: target});
+                slider.animationStore.doAnimation({ currentSlide: target });
+            },
+            pauseSlider: function() {
+                slider.pause();
+            },
+            playSlider: function() {
+                slider.play();
             }
+        };
+
+        slider.animateSlides = function() {
+            var target = slider.getIndexCalcDir('next');
+            slider.animationStore.doAnimation({ currentSlide: target });
+        };
+
+        slider.pause = function() {
+            slider.isPaused = true;
+
+            if (slider.options.auto) {
+                clearInterval(slider.autoTimeout);
+            }
+
+            console.log('DevSlider method: slider.isPaused()');
+        };
+
+        slider.play = function() {
+            slider.isPaused = false;
+
+            if (slider.options.auto) {
+                slider.autoTimeout = setInterval(slider.animateSlides, slider.options.autoDelay);
+            }
+
+            console.log('DevSlider method: slider.play()');
+        };
+
+        slider.getIndexCalcDir = function(dir) {
+          slider.direction = dir;
+          if (dir === 'next') {
+            return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
+          } else {
+            return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
+          }
         };
 
         // Run initializer
@@ -331,30 +381,33 @@
 
     $.fn.deviora = function( options ) {
         return this.each(function () {
-            if (!$.hasData(this, "dev-slider-init")) {
-                $.data(this, 'dev-slider-init', true);
-
-                $.data(this, "devioraSlider", new $.deviora(this, options));
+            if (!$.hasData(this, 'devSliderInit')) {
+                $.data(this, {
+                    'devSliderInit': true,
+                    'devioraSlider': new $.deviora(this, options)
+                });
             }
         });
     };
 
     $.fn.deviora.defaults = {
-        namespace: 'dev-',                // Support type: String, Integer
-        slideSelector: '> li',            // Support type: String
-        animation: 'slide',               // Support type: String [slide, fade, pretty]
-        easing: 'ease',                   // Support type: String
-        delay: 5000,                      // Support type: Integer [0...]
-        speed: 600,                       // Support type: Integer [0...]
-        startAt: 0,                       // Support type: Integer [0...]
+        namespace: 'dev-',                // String, Integer:
+        slideSelector: '> li',            // String:
+        animation: 'slide',               // String [slide, fade, pretty]:
+        easing: 'ease',                   // String:
+        speed: 600,                       // Integer [0...]:
+        startAt: 0,                       // Integer [0...]:
 
         // Usability features
-        touch: true,                      // Support type: Bool [true, false]
+        touch: true,                      // Bool: ..
+        auto: true,                       // Bool: ..
+        autoDelay: 5000,                  // Integer [0...]: ..
+        pauseOnHover: false,              // Bool: ..
 
         // Primary Controls
-        directionNav: true,               // Support type: Bool [true, false]
-        paginationNav: true,              // Support type: Bool [true, false]
-        navigationText: ['Prev', 'Next'], // Support type: Array, Bool [false]
+        directionNav: true,               // Bool: ..
+        paginationNav: true,              // Bool: ..
+        navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
 
         // Callback API
         devBeforeSlide: function() {},    // API: Callback
@@ -367,7 +420,8 @@
 
 
 var slider = $('.my-slider').deviora({
-    delay: 8000,
+    autoDelay: 3500,
+    pauseOnHover: true,
     startAt: 0,
     directionNav: true,
     paginationNav: true,
@@ -388,9 +442,8 @@ var slider = $('.my-slider').deviora({
     devAfterInit: function() {
         // console.info('devAfterInit');
     }
-}).data('devioraSlider');
 
-console.log( slider );
+}).data('devioraSlider');
 
 $('#nextTo').click(function () {
     slider.nextSlide();
@@ -400,4 +453,15 @@ $('#nextTo').click(function () {
 $('#prevTo').click(function () {
     slider.prevSlide();
     return false;
-})
+});
+
+$('#pause').click(function () {
+    slider.pauseSlider();
+    return false;
+});
+
+$('#play').click(function () {
+    slider.playSlider();
+    return false;
+});
+
