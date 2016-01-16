@@ -18,7 +18,8 @@
             eventType = "click touchend MSPointerUp keyup",
             msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
             touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
-            methods = {};
+            methods = {},
+            timeInSeconds = null;
 
         // Add a reverse reference to the DOM object
         $.data(slider, shortNamespace + 'slider', slider);
@@ -39,26 +40,12 @@
                 slider.lastItem = slider.count - 1;
 
                 // Bool setting ..
-                slider.autoTimeout = null;
+                // slider.autoTimeout = null;
                 slider.animating = false;
 
                 slider.isPaused = false;
                 slider.isStopped = false;
                 slider.isPlaying = false;
-
-                // console.log(slider.options);
-
-                if (slider.options.auto) {
-                    slider.autoTimeout = setInterval(slider.animateSlides, slider.options.autoDelay);
-                }
-
-                if (slider.options.auto && slider.options.pauseOnHover) {
-                    slider.hover(function onMouseEnter() {
-                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
-                    }, function onMouseLeave() {
-                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
-                    });
-                }
 
 
                 // Touch / UseCSS:
@@ -95,8 +82,13 @@
                 // API: Before init - Callback
                 slider.options.devBeforeInit();
 
+                if (slider.options.shuffle) {
+                    slider.$slides.sort(function() { return (Math.round(Math.random()) - 0.5) });
+                    slider.empty().append(slider.$slides);
+                }
+
                 // Start build shell slider
-                slider.shell.wrapup();
+                methods.shell.wrapup();
 
                 // DirectionNav:
                 if (slider.options.directionNav) methods.directionNav.setup();
@@ -113,19 +105,70 @@
                 slider.$viewport.prepend( slider );
                 // End build shell slider
 
-                slider.shell.setup();
+                methods.shell.setup();
                 // Set active slide
                 slider.setActive();
 
-                // Ken Burn:
-                if (slider.options.kenBurn) methods.kenBurn.init();
+                // After build slider
+                if (slider.options.auto) {
+                    methods.autoPlay.start();
+                }
 
-                console.log(slider);
+                if (slider.options.auto && slider.options.pauseOnHover) {
+                    slider.hover(function onMouseEnter() {
+                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
+                    }, function onMouseLeave() {
+                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
+                    });
+                }
+
+                // console.log(slider);
 
                 slider.$viewport.addClass(shortNamespace + 'slider-initialised');
 
                 // API: After init - Callback
                 slider.options.devAfterInit();
+            },
+
+            shell: {
+                // Setup default styles
+                setup: function() {
+                    //slider.addClass(namespace + 'slides');
+
+                    $(slider.options.slideSelector, slider)
+                        .css({
+                            'float': 'left',
+                            'width': slider.width(),
+                            'display': 'block'
+                        });
+
+                    slider.css({
+                        'width': (100 * slider.count) + '%'
+                    });
+                },
+
+                // Build our slider with HTML
+                wrapup: function() {
+                    slider.$wrapper =
+                        $('<div class="' + namespace + 'wrapper"></div>');
+                    slider.$viewport =
+                        $('<div class="' + namespace + 'viewport"></div>');
+
+                    // Set private context
+                    slider.$viewport.css({
+                        'overflow': 'hidden',
+                        'position': 'relative'
+                    });
+
+                    slider.$wrapper.append( slider.$viewport );
+                },
+
+                setActive: function () {
+                    if (slider.prevItem != slider.currentSlide) {
+                        $(slider.options.slideSelector, slider).eq(slider.prevItem).removeClass(namespace + 'active-slide');
+                    }
+                    $(slider.options.slideSelector, slider).eq(slider.currentSlide).addClass(namespace + 'active-slide');
+                }
             },
 
             directionNav: {
@@ -213,6 +256,38 @@
                 }
             },
 
+            autoPlay: {
+                spendTime: null,
+
+                startTime: null,
+
+                start: function() {
+                    methods.autoPlay.startTime = Date.now();
+                    methods.autoPlay.run();
+                },
+
+                run: function() {
+                    methods.autoPlay.spendTime = Date.now() - methods.autoPlay.startTime;
+
+                    if (slider.options.kenBurn) {
+                        methods.kenBurn.update();
+                    }
+
+                    if (!slider.isPaused && !slider.isStopped) {
+                        if (methods.autoPlay.spendTime <= slider.options.autoDelay) {
+                            slider.requestAnimationFrame = requestAnimationFrame(methods.autoPlay.run);
+                        } else {
+                            slider.animateSlides();
+                        }
+                    }
+                },
+
+                setLastDate: function() {
+                    methods.autoPlay.startTime = Date.now() - methods.autoPlay.spendTime;
+                    methods.autoPlay.run();
+                }
+            },
+
             kenBurn: {
                 progress: 0,
 
@@ -223,33 +298,22 @@
 
                     slider.$kenBurn = $elementWrapper.find('.ken-burn-progress');
                     methods.kenBurn.reset();
-
                     slider.$viewport.prepend( $elementWrapper );
                 },
+
                 update: function() {
-                    var fps = 1000/60,
-                        maxSize = 100,
-                        factor = 1,
-                        percent = (factor / slider.options.autoDelay) * fps * maxSize;
+                    var maxSize = 100,
+                        percent = (methods.autoPlay.spendTime / slider.options.autoDelay) * maxSize;
 
-                    methods.kenBurn.progress += percent.toFixed(2) * 1;
-
+                    methods.kenBurn.progress = percent.toFixed(2) * 1;
                     slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
-
-                    if (methods.kenBurn.progress >= maxSize) {
-                        methods.kenBurn.progress = 0;
-                        methods.kenBurn.reset();
-                    }
                 },
 
                 reset: function() {
+                    if (methods.kenBurn.progress !== 0) {
+                        methods.kenBurn.progress = 0;
+                    }
                     slider.$kenBurn.width(0);
-                },
-
-                init: function() {
-                    setInterval(function() {
-                        if (!slider.isPaused && !slider.isStopped ) methods.kenBurn.update();
-                    }, 1000/60);
                 },
 
                 destroy: function() {}
@@ -259,50 +323,10 @@
         /*------------------------------------*\
           - PUBLIC METHODS -
         \*------------------------------------*/
-        slider.shell = {
-            // Setup default styles
-            setup: function() {
-                //slider.addClass(namespace + 'slides');
-
-                $(slider.options.slideSelector, slider)
-                    .css({
-                        'float': 'left',
-                        'width': slider.width(),
-                        'display': 'block'
-                    });
-
-                slider.css({
-                    'width': (100 * slider.count) + '%'
-                });
-            },
-
-            // Build our slider with HTML
-            wrapup: function() {
-                slider.$wrapper =
-                    $('<div class="' + namespace + 'wrapper"></div>');
-                slider.$viewport =
-                    $('<div class="' + namespace + 'viewport"></div>');
-
-                // Set private context
-                slider.$viewport.css({
-                    'overflow': 'hidden',
-                    'position': 'relative'
-                });
-
-                slider.$wrapper.append( slider.$viewport );
-            },
-
-            setActive: function () {
-                if (slider.prevItem != slider.currentSlide) {
-                    $(slider.options.slideSelector, slider).eq(slider.prevItem).removeClass(namespace + 'active-slide');
-                }
-                $(slider.options.slideSelector, slider).eq(slider.currentSlide).addClass(namespace + 'active-slide');
-            }
-        };
 
         // Group animations in one object
         slider.animationStore = {
-            slideSingleItem: function(currentSlide) {
+            slideSingleItem: function( currentSlide ) {
                 var widthViewport = slider.width() / slider.count,
                     origin = -(widthViewport * currentSlide) + 'px';
 
@@ -324,25 +348,28 @@
                         slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
 
                         slider.on(transitionEnd, function() {
-                            //console.log('end');
-                            slider.setActive();
-                            slider.animating = false;
                             slider.off(transitionEnd);
 
-                            // API: After slide - Callback
-                            slider.options.devAfterSlide();
+                            slider.animationStore.onEndAnimate();
                         });
                     } else {
-                        slider.animate({ 'marginLeft': origin }, slider.options.speed, slider.easing, function animationEnd() {
-                            //console.log('end');
-                            slider.setActive();
-                            slider.animating = false;
-
-                            // API: After slide - Callback
-                            slider.options.devAfterSlide();
+                        slider.animate({ 'marginLeft': origin }, slider.options.speed, slider.options.easing, function animationEnd() {
+                            slider.animationStore.onEndAnimate();
                         });
                     }
                 }
+            },
+
+            onEndAnimate: function() {
+                slider.animating = false;
+                slider.setActive();
+
+                if (slider.options.auto) {
+                    methods.autoPlay.start();
+                }
+
+                // API: After slide - Callback
+                slider.options.devAfterSlide();
             },
 
             fadeSingleItem: function () {
@@ -351,6 +378,16 @@
 
             // Dispatcher animationLibrary ..
             doAnimation: function(args) {
+                if (slider.options.auto) {
+                    methods.autoPlay.startTime = null;
+                    methods.autoPlay.spendTime = null;
+                    cancelAnimationFrame(slider.requestAnimationFrame);
+                }
+
+                if (slider.options.kenBurn) {
+                    methods.kenBurn.reset();
+                }
+
                 if(slider.options.animation === 'slide') {
                     this.slideSingleItem(args.currentSlide);
                 } else if (slider.options.animation === 'fade') {
@@ -360,7 +397,7 @@
         };
 
         slider.setActive = function () {
-            slider.shell.setActive();
+            methods.shell.setActive();
 
             if (slider.options.paginationNav) {
                 methods.paginationNav.setActive();
@@ -372,10 +409,12 @@
                 var target = slider.getIndexCalcDir('next');
                 slider.animationStore.doAnimation({ currentSlide: target });
             },
+
             prevSlide: function() {
                 var target = slider.getIndexCalcDir('prev');
                 slider.animationStore.doAnimation({ currentSlide: target });
             },
+
             pause: function() {
                 slider.isStopped = true;
                 slider.pause();
@@ -383,6 +422,7 @@
                 // API: On stop click - Callback
                 slider.options.devOnPause();
             },
+
             play: function() {
                 slider.isStopped = false;
                 slider.play();
@@ -401,7 +441,7 @@
             slider.isPaused = true;
 
             if (slider.options.auto) {
-                clearInterval(slider.autoTimeout);
+                cancelAnimationFrame(slider.requestAnimationFrame);
             }
 
             console.log('dev: slider.isPaused()');
@@ -411,7 +451,7 @@
             slider.isPaused = false;
 
             if (slider.options.auto) {
-                slider.autoTimeout = setInterval(slider.animateSlides, slider.options.autoDelay);
+                methods.autoPlay.setLastDate();
             }
 
             console.log('dev: slider.play()');
@@ -460,6 +500,7 @@
         kenBurn: false,                   // Bool: Dependency auto()
         autoDelay: 5000,                  // Integer [0...]: ..
         pauseOnHover: false,              // Bool: ..
+        shuffle: false,                   // Bool: ..
 
         // Primary Controls
         directionNav: true,               // Bool: ..
@@ -481,7 +522,8 @@
 var slider = $('.my-slider').deviora({
     auto: true,
     kenBurn: true,
-    autoDelay: 6500,
+    shuffle: true,
+    autoDelay: 3500,
     pauseOnHover: true,
     startAt: 0,
     directionNav: true,
