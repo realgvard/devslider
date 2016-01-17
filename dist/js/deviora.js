@@ -19,7 +19,7 @@
             msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
             touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
             methods = {},
-            timeInSeconds = null;
+            publickMethods;
 
         // Add a reverse reference to the DOM object
         $.data(slider, shortNamespace + 'slider', slider);
@@ -40,7 +40,7 @@
                 slider.lastItem = slider.count - 1;
 
                 // Bool setting ..
-                // slider.autoTimeout = null;
+                slider.autoTimeout = null;
                 slider.animating = false;
 
                 slider.isPaused = false;
@@ -82,6 +82,7 @@
                 // API: Before init - Callback
                 slider.options.devBeforeInit();
 
+                // Shuffle:
                 if (slider.options.shuffle) {
                     slider.$slides.sort(function() { return (Math.round(Math.random()) - 0.5) });
                     slider.empty().append(slider.$slides);
@@ -122,7 +123,7 @@
                     });
                 }
 
-                // console.log(slider);
+                console.log(slider);
 
                 slider.$viewport.addClass(shortNamespace + 'slider-initialised');
 
@@ -275,7 +276,7 @@
 
                     if (!slider.isPaused && !slider.isStopped) {
                         if (methods.autoPlay.spendTime <= slider.options.autoDelay) {
-                            slider.requestAnimationFrame = requestAnimationFrame(methods.autoPlay.run);
+                            slider.autoTimeout = requestAnimationFrame(methods.autoPlay.run);
                         } else {
                             slider.animateSlides();
                         }
@@ -317,6 +318,40 @@
                 },
 
                 destroy: function() {}
+            }
+        };
+
+        publickMethods = {
+            nextSlide: function() {
+                var target = slider.getIndexCalcDir('next');
+                slider.animationStore.doAnimation({ currentSlide: target });
+            },
+
+            prevSlide: function() {
+                var target = slider.getIndexCalcDir('prev');
+                slider.animationStore.doAnimation({ currentSlide: target });
+            },
+
+            pause: function() {
+                slider.isStopped = true;
+                slider.pause();
+
+                // API: On stop click - Callback
+                slider.options.devOnPause();
+            },
+
+            play: function() {
+                slider.isStopped = false;
+                slider.play();
+
+                // API: On play click - Callback
+                slider.options.devOnPlay();
+            },
+
+            goToNextSlide: function( index ) {
+                if (index !== slider.currentSlide) {
+                    slider.animationStore.doAnimation({ currentSlide: index * 1 });
+                }
             }
         };
 
@@ -381,7 +416,7 @@
                 if (slider.options.auto) {
                     methods.autoPlay.startTime = null;
                     methods.autoPlay.spendTime = null;
-                    cancelAnimationFrame(slider.requestAnimationFrame);
+                    cancelAnimationFrame(slider.autoTimeout);
                 }
 
                 if (slider.options.kenBurn) {
@@ -404,34 +439,6 @@
             }
         };
 
-        slider.publickMethods = {
-            nextSlide: function() {
-                var target = slider.getIndexCalcDir('next');
-                slider.animationStore.doAnimation({ currentSlide: target });
-            },
-
-            prevSlide: function() {
-                var target = slider.getIndexCalcDir('prev');
-                slider.animationStore.doAnimation({ currentSlide: target });
-            },
-
-            pause: function() {
-                slider.isStopped = true;
-                slider.pause();
-
-                // API: On stop click - Callback
-                slider.options.devOnPause();
-            },
-
-            play: function() {
-                slider.isStopped = false;
-                slider.play();
-
-                // API: On play click - Callback
-                slider.options.devOnPlay();
-            }
-        };
-
         slider.animateSlides = function() {
             var target = slider.getIndexCalcDir('next');
             slider.animationStore.doAnimation({ currentSlide: target });
@@ -441,10 +448,10 @@
             slider.isPaused = true;
 
             if (slider.options.auto) {
-                cancelAnimationFrame(slider.requestAnimationFrame);
+                cancelAnimationFrame(slider.autoTimeout);
             }
 
-            console.log('dev: slider.isPaused()');
+            // console.log('dev: slider.isPaused()');
         };
 
         slider.play = function() {
@@ -454,7 +461,7 @@
                 methods.autoPlay.setLastDate();
             }
 
-            console.log('dev: slider.play()');
+            // console.log('dev: slider.play()');
         };
 
         slider.getIndexCalcDir = function(dir) {
@@ -470,7 +477,7 @@
         methods.init();
 
         // Return methods which available user
-        return slider.publickMethods;
+        return publickMethods;
     }
 
     $.fn.deviora = function( options ) {
@@ -522,7 +529,7 @@
 var slider = $('.my-slider').deviora({
     auto: true,
     kenBurn: true,
-    shuffle: true,
+    shuffle: false,
     autoDelay: 3500,
     pauseOnHover: true,
     startAt: 0,
@@ -563,7 +570,7 @@ var slider = $('.my-slider').deviora({
 $('#nextTo').click(function () {
     slider.nextSlide();
     return false;
-})
+});
 
 $('#prevTo').click(function () {
     slider.prevSlide();
@@ -577,6 +584,12 @@ $('#pause').click(function () {
 
 $('#play').click(function () {
     slider.play();
+    return false;
+});
+
+$('#goToSlide').click(function () {
+    var val = $('#valueGoToSlide').val();
+    slider.goToNextSlide(val);
     return false;
 });
 
