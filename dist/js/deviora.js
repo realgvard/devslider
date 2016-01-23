@@ -38,6 +38,12 @@
                 slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
+                slider.cloneCount = 0;
+
+                if (slider.options.animation === 'slide') {
+                    slider.cloneCount = 2;  // Add clone childs
+                    // slider.currentSlide = slider.cloneCount / 2;
+                }
 
                 // Bool setting ..
                 slider.autoTimeout = null;
@@ -109,6 +115,7 @@
                 methods.shell.setup();
                 // Set active slide
                 slider.setActive();
+                methods.shell.setStartSlide( slider.currentSlide );
 
                 // After build slider
                 if (slider.options.auto) {
@@ -123,8 +130,6 @@
                     });
                 }
 
-                console.log(slider);
-
                 slider.$viewport.addClass(shortNamespace + 'slider-initialised');
 
                 // API: After init - Callback
@@ -134,17 +139,20 @@
             shell: {
                 // Setup default styles
                 setup: function() {
-                    //slider.addClass(namespace + 'slides');
+                    if (slider.options.animation === 'slide') {
+                        slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
+                            .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
+                    }
 
                     $(slider.options.slideSelector, slider)
                         .css({
                             'float': 'left',
-                            'width': slider.width(),
+                            'width': slider.$wrapper.width(),
                             'display': 'block'
                         });
 
                     slider.css({
-                        'width': (100 * slider.count) + '%'
+                        'width': (100 * (slider.count + slider.cloneCount)) + '%'
                     });
                 },
 
@@ -164,11 +172,27 @@
                     slider.$wrapper.append( slider.$viewport );
                 },
 
-                setActive: function () {
-                    if (slider.prevItem != slider.currentSlide) {
-                        $(slider.options.slideSelector, slider).eq(slider.prevItem).removeClass(namespace + 'active-slide');
+                setStartSlide: function( index ) {
+                    var widthViewport = slider.width() / (slider.count + slider.cloneCount),
+                        origin = -(widthViewport * (index + (slider.cloneCount / 2))) + 'px';
+
+                    if (slider.transitions) {
+                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : '',
+                            CSS3Transition = 'transition',
+                            CSS3Transform = pfxCSS3 + 'transform';
+
+                        slider.css(CSS3Transition, '');
+                        slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
+                    } else {
+                        slider.css('marginLeft', origin);
                     }
-                    $(slider.options.slideSelector, slider).eq(slider.currentSlide).addClass(namespace + 'active-slide');
+                },
+
+                setActive: function() {
+                    if (slider.prevItem != slider.currentSlide) {
+                        $(slider.options.slideSelector, slider).eq(slider.prevItem + slider.cloneCount / 2).removeClass(namespace + 'active-slide');
+                    }
+                    $(slider.options.slideSelector, slider).eq(slider.currentSlide + slider.cloneCount / 2).addClass(namespace + 'active-slide');
                 }
             },
 
@@ -358,14 +382,23 @@
         /*------------------------------------*\
           - PUBLIC METHODS -
         \*------------------------------------*/
-
         // Group animations in one object
         slider.animationStore = {
-            slideSingleItem: function( currentSlide ) {
-                var widthViewport = slider.width() / slider.count,
-                    origin = -(widthViewport * currentSlide) + 'px';
+            slideSingleItem: function( params ) {
+                var widthViewport = slider.width() / (slider.count + slider.cloneCount),
+                    currentSlide = params.currentSlide,
+                    origin;
+
 
                 if (slider.animating === false) {
+                    if (slider.direction === 'next' && params.currentSlide === 0) {
+                        origin = -(widthViewport * (slider.count + slider.cloneCount / 2)) + 'px';
+                    } else if (slider.direction === 'prev' && params.currentSlide === slider.count - 1) {
+                        origin = -(widthViewport * (slider.cloneCount / 2 - 1)) + 'px';
+                    } else {
+                        origin = -(widthViewport * (currentSlide + slider.cloneCount / 2)) + 'px';
+                    }
+
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
 
@@ -384,7 +417,6 @@
 
                         slider.on(transitionEnd, function() {
                             slider.off(transitionEnd);
-
                             slider.animationStore.onEndAnimate();
                         });
                     } else {
@@ -403,6 +435,15 @@
                     methods.autoPlay.start();
                 }
 
+                // Set index to default position
+                if(slider.options.animation === 'slide') {
+                    if (slider.direction === 'next' && slider.currentSlide === 0) {
+                        methods.shell.setStartSlide(0);
+                    } else if (slider.direction === 'prev' && slider.currentSlide === slider.count - 1) {
+                        methods.shell.setStartSlide(slider.count - 1);
+                    }
+                }
+
                 // API: After slide - Callback
                 slider.options.devAfterSlide();
             },
@@ -412,7 +453,7 @@
             },
 
             // Dispatcher animationLibrary ..
-            doAnimation: function(args) {
+            doAnimation: function( args ) {
                 if (slider.options.auto) {
                     methods.autoPlay.startTime = null;
                     methods.autoPlay.spendTime = null;
@@ -424,14 +465,14 @@
                 }
 
                 if(slider.options.animation === 'slide') {
-                    this.slideSingleItem(args.currentSlide);
+                    this.slideSingleItem(args);
                 } else if (slider.options.animation === 'fade') {
-                    this.fadeSingleItem(args.currentSlide);
+                    this.fadeSingleItem(args);
                 }
             }
         };
 
-        slider.setActive = function () {
+        slider.setActive = function() {
             methods.shell.setActive();
 
             if (slider.options.paginationNav) {
@@ -496,7 +537,7 @@
         // Main dependency
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
-        animation: 'slide',               // String [slide, fade, pretty]:
+        animation: 'slide',               // String [slide, fade, bitches]:
         easing: 'ease',                   // String:
         speed: 600,                       // Integer [0...]:
         startAt: 0,                       // Integer [0...]:
@@ -592,4 +633,6 @@ $('#goToSlide').click(function () {
     slider.goToNextSlide(val);
     return false;
 });
+
+
 
