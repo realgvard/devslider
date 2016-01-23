@@ -391,6 +391,7 @@
 
 
                 if (slider.animating === false) {
+                    // catch animation first and last slide
                     if (slider.direction === 'next' && params.currentSlide === 0) {
                         origin = -(widthViewport * (slider.count + slider.cloneCount / 2)) + 'px';
                     } else if (slider.direction === 'prev' && params.currentSlide === slider.count - 1) {
@@ -454,20 +455,22 @@
 
             // Dispatcher animationLibrary ..
             doAnimation: function( args ) {
-                if (slider.options.auto) {
-                    methods.autoPlay.startTime = null;
-                    methods.autoPlay.spendTime = null;
-                    cancelAnimationFrame(slider.autoTimeout);
-                }
+                if (!slider.isPaused && !slider.isStopped) {
+                    if (slider.options.auto) {
+                        methods.autoPlay.startTime = null;
+                        methods.autoPlay.spendTime = null;
+                        cancelAnimationFrame(slider.autoTimeout);
+                    }
 
-                if (slider.options.kenBurn) {
-                    methods.kenBurn.reset();
-                }
+                    if (slider.options.kenBurn) {
+                        methods.kenBurn.reset();
+                    }
 
-                if(slider.options.animation === 'slide') {
-                    this.slideSingleItem(args);
-                } else if (slider.options.animation === 'fade') {
-                    this.fadeSingleItem(args);
+                    if(slider.options.animation === 'slide') {
+                        this.slideSingleItem(args);
+                    } else if (slider.options.animation === 'fade') {
+                        this.fadeSingleItem(args);
+                    }
                 }
             }
         };
