@@ -260,6 +260,7 @@
                             target = $this.data(namespace + 'bullet');
 
                         if(target != slider.currentSlide) {
+                            slider.direction = null;
                             slider.animationStore.execute({currentSlide: target});
                         }
                     });
@@ -374,6 +375,7 @@
 
             goToNextSlide: function( index ) {
                 if (index !== slider.currentSlide) {
+                    slider.direction = null;
                     slider.animationStore.execute({ currentSlide: index * 1 });
                 }
             }
@@ -391,6 +393,10 @@
 
 
                 if (slider.animating === false) {
+                    // API: Before slide - Callback
+                    slider.options.devBeforeSlide();
+
+
                     // catch animation first and last slide
                     if (slider.direction === 'next' && params.currentSlide === 0) {
                         origin = -(widthViewport * (slider.count + slider.cloneCount / 2)) + 'px';
@@ -399,9 +405,6 @@
                     } else {
                         origin = -(widthViewport * (currentSlide + slider.cloneCount / 2)) + 'px';
                     }
-
-                    // API: Before slide - Callback
-                    slider.options.devBeforeSlide();
 
                     slider.prevItem = slider.currentSlide;
                     slider.currentSlide = currentSlide;
@@ -540,7 +543,7 @@
 
     $.fn.deviora.defaults = {
 
-        // Main dependency
+        // Most important dev features
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
         animation: 'slide',               // String [slide, fade, bitches]:
@@ -556,12 +559,14 @@
         pauseOnHover: false,              // Bool: ..
         shuffle: false,                   // Bool: ..
 
-        // Primary Controls
+        // Pagination
         directionNav: true,               // Bool: ..
+
+        // Navigation
         paginationNav: true,              // Bool: ..
         navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
 
-        // Callback API
+        // Callbacks API
         devBeforeSlide: function() {},    // API: Callback on ..
         devAfterSlide: function() {},     // API: Callback on ..
         devBeforeInit: function() {},     // API: Callback on ..
