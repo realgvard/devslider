@@ -221,7 +221,7 @@
 
                         target = ( $(this).hasClass(namespace + 'prev') ) ? slider.getIndexCalcDir('prev') : slider.getIndexCalcDir('next');
 
-                        slider.animationStore.doAnimation({currentSlide: target});
+                        slider.animationStore.execute({currentSlide: target});
                     });
 
 
@@ -260,7 +260,7 @@
                             target = $this.data(namespace + 'bullet');
 
                         if(target != slider.currentSlide) {
-                            slider.animationStore.doAnimation({currentSlide: target});
+                            slider.animationStore.execute({currentSlide: target});
                         }
                     });
 
@@ -348,12 +348,12 @@
         publickMethods = {
             nextSlide: function() {
                 var target = slider.getIndexCalcDir('next');
-                slider.animationStore.doAnimation({ currentSlide: target });
+                slider.animationStore.execute({ currentSlide: target });
             },
 
             prevSlide: function() {
                 var target = slider.getIndexCalcDir('prev');
-                slider.animationStore.doAnimation({ currentSlide: target });
+                slider.animationStore.execute({ currentSlide: target });
             },
 
             pause: function() {
@@ -374,7 +374,7 @@
 
             goToNextSlide: function( index ) {
                 if (index !== slider.currentSlide) {
-                    slider.animationStore.doAnimation({ currentSlide: index * 1 });
+                    slider.animationStore.execute({ currentSlide: index * 1 });
                 }
             }
         };
@@ -453,8 +453,11 @@
 
             },
 
-            // Dispatcher animationLibrary ..
-            doAnimation: function( args ) {
+            /**
+             * Description: call objects which encapsulate actions and parameters.
+             * @type Command
+             */
+            execute: function( command ) {
                 if (!slider.isPaused && !slider.isStopped) {
                     if (slider.options.auto) {
                         methods.autoPlay.startTime = null;
@@ -467,9 +470,9 @@
                     }
 
                     if(slider.options.animation === 'slide') {
-                        this.slideSingleItem(args);
+                        this.slideSingleItem(command);
                     } else if (slider.options.animation === 'fade') {
-                        this.fadeSingleItem(args);
+                        this.fadeSingleItem(command);
                     }
                 }
             }
@@ -485,7 +488,7 @@
 
         slider.animateSlides = function() {
             var target = slider.getIndexCalcDir('next');
-            slider.animationStore.doAnimation({ currentSlide: target });
+            slider.animationStore.execute({ currentSlide: target });
         };
 
         slider.pause = function() {
@@ -546,7 +549,7 @@
         startAt: 0,                       // Integer [0...]:
 
         // Usability features
-        touch: true,                      // Bool: ..
+        // touch: true,                      // Bool: ..
         auto: true,                       // Bool: ..
         kenBurn: false,                   // Bool: Dependency auto()
         autoDelay: 5000,                  // Integer [0...]: ..
