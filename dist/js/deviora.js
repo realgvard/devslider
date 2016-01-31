@@ -16,8 +16,8 @@
             namespace = slider.options.namespace,
             shortNamespace = namespace.replace(/[-|\s]+$/g, ''),
             eventType = "click touchend MSPointerUp keyup",
-            msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
-            touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
+            // msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
+            // touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
             methods = {},
             publickMethods;
 
@@ -34,7 +34,6 @@
                 // Get current slide and make sure it is a number
                 slider.currentSlide = parseInt(slider.options.startAt ? slider.options.startAt : 0, 10);
                 slider.prevItem = slider.currentSlide;
-
                 slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
@@ -42,10 +41,14 @@
 
                 if (slider.options.animation === 'slide') {
                     slider.cloneCount = 2;  // Add clone childs
-                    // slider.currentSlide = slider.cloneCount / 2;
+                }
+
+                if(!!slider.options.preloadImages) {
+                    slider.$preloader = $('<div class="' + namespace + 'preloader"></div>');
                 }
 
                 // Bool setting ..
+                slider.initialized = false;
                 slider.autoTimeout = null;
                 slider.animating = false;
 
@@ -106,6 +109,17 @@
                 // Ken Burn:
                 if (slider.options.kenBurn) methods.kenBurn.setup();
 
+                var preloadElements;
+                if(!!slider.options.preloadImages) {
+                    if (slider.options.preloadImages === 'visible') {
+                        preloadElements = slider.$slides.eq(slider.currentSlide);
+                    }
+                    if (slider.options.preloadImages === 'all') {
+                        preloadElements = slider.$slides;
+
+                    }
+                }
+
                 // Append collection build items
                 slider.before( slider.$wrapper );
                 // Append slider to collection
@@ -116,6 +130,20 @@
                 // Set active slide
                 slider.setActive();
                 methods.shell.setStartSlide( slider.currentSlide );
+
+                // define load images
+                if(!!slider.options.preloadImages) {
+                    methods.loadElements(preloadElements, methods.start);
+                } else {
+                    methods.start();
+                    console.log('yes');
+                }
+            },
+
+            start: function() {
+                if(!!slider.options.preloadImages) {
+                    slider.$preloader.remove();
+                }
 
                 // After build slider
                 if (slider.options.auto) {
@@ -134,6 +162,7 @@
 
                 // API: After init - Callback
                 slider.options.devAfterInit();
+                slider.initialized = true;
             },
 
             shell: {
@@ -168,6 +197,11 @@
                         'overflow': 'hidden',
                         'position': 'relative'
                     });
+
+                    // Append preloader
+                    if(!!slider.options.preloadImages) {
+                        slider.$viewport.append( slider.$preloader );
+                    }
 
                     slider.$wrapper.append( slider.$viewport );
                 },
@@ -318,11 +352,11 @@
                 progress: 0,
 
                 setup: function() {
-                    var $elementWrapper = $('<div class="ken-burn-wrapper">' +
-                            '<div class="ken-burn-progress"></div>' +
+                    var $elementWrapper = $('<div class="' + namespace + 'ken-burn-wrapper">' +
+                            '<div class="' + namespace + 'ken-burn-progress"></div>' +
                         '</div>');
 
-                    slider.$kenBurn = $elementWrapper.find('.ken-burn-progress');
+                    slider.$kenBurn = $elementWrapper.find('.' + namespace + 'ken-burn-progress');
                     methods.kenBurn.reset();
                     slider.$viewport.prepend( $elementWrapper );
                 },
@@ -343,40 +377,43 @@
                 },
 
                 destroy: function() {}
-            }
-        };
-
-        publickMethods = {
-            nextSlide: function() {
-                var target = slider.getIndexCalcDir('next');
-                slider.animationStore.execute({ currentSlide: target });
             },
 
-            prevSlide: function() {
-                var target = slider.getIndexCalcDir('prev');
-                slider.animationStore.execute({ currentSlide: target });
-            },
+            loadElements: function(elements, callback){
+                var total = slider.find(elements).length,
+                    count = 0;
 
-            pause: function() {
-                slider.isStopped = true;
-                slider.pause();
+                if (total === 0){
+                    callback();
+                    return;
+                }
 
-                // API: On stop click - Callback
-                slider.options.devOnPause();
-            },
+                window.addEventListener('error', onErrorEvent, true);
 
-            play: function() {
-                slider.isStopped = false;
-                slider.play();
+                elements.find('img, ifram').each(function() {
+                    $(this).one('load', function() {
+                        count += 1;
 
-                // API: On play click - Callback
-                slider.options.devOnPlay();
-            },
+                        if(count === total) {
+                            window.removeEventListener('error', onErrorEvent, true);
+                            callback();
+                        }
+                    }).each(function() {
+                        if(this.complete) {
+                            $(this).load();
+                        }
+                    });
+                });
 
-            goToNextSlide: function( index ) {
-                if (index !== slider.currentSlide) {
-                    slider.direction = null;
-                    slider.animationStore.execute({ currentSlide: index * 1 });
+                function onErrorEvent(e) {
+                    var target = e.target,
+                        posibleNodeNames = 'img iframe';
+
+                    if (!!target.closest('.' + namespace + 'viewport') &&
+                        posibleNodeNames.toUpperCase().indexOf(target.nodeName) != -1 &&
+                        slider.options.preloadImages != 'visible') {
+                        count += 1;
+                    }
                 }
             }
         };
@@ -461,7 +498,7 @@
              * @type Command
              */
             execute: function( command ) {
-                if (!slider.isPaused && !slider.isStopped) {
+                if (!slider.isPaused && !slider.isStopped && slider.initialized) {
                     if (slider.options.auto) {
                         methods.autoPlay.startTime = null;
                         methods.autoPlay.spendTime = null;
@@ -514,6 +551,12 @@
             // console.log('dev: slider.play()');
         };
 
+        // slider.destroy = function() {
+        //     if (slider.initialized) {
+
+        //     }
+        // };
+
         slider.getIndexCalcDir = function(dir) {
           slider.direction = dir;
           if (dir === 'next') {
@@ -521,6 +564,49 @@
           } else {
             return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
           }
+        };
+
+
+        publickMethods = {
+            nextSlide: function() {
+                var target = slider.getIndexCalcDir('next');
+                slider.animationStore.execute({ currentSlide: target });
+            },
+
+            prevSlide: function() {
+                var target = slider.getIndexCalcDir('prev');
+                slider.animationStore.execute({ currentSlide: target });
+            },
+
+            pause: function() {
+                slider.isStopped = true;
+                slider.pause();
+
+                // API: On stop click - Callback
+                slider.options.devOnPause();
+            },
+
+            play: function() {
+                slider.isStopped = false;
+                slider.play();
+
+                // API: On play click - Callback
+                slider.options.devOnPlay();
+            },
+
+            destroy: function() {
+                slider.destroy();
+
+                // API: On play click - Callback
+                slider.options.devOnDestroy();
+            },
+
+            goToNextSlide: function( index ) {
+                if (index !== slider.currentSlide) {
+                    slider.direction = null;
+                    slider.animationStore.execute({ currentSlide: index * 1 });
+                }
+            }
         };
 
         // Run initializer
@@ -549,15 +635,23 @@
         animation: 'slide',               // String [slide, fade, bitches]:
         easing: 'ease',                   // String:
         speed: 600,                       // Integer [0...]:
-        startAt: 0,                       // Integer [0...]:
+        preloadImages: 'visible',         // String visible, all, false
+
+        // Mouse Events
+        // touch: true,                      // Bool: ..
 
         // Usability features
-        // touch: true,                      // Bool: ..
-        auto: true,                       // Bool: ..
         kenBurn: false,                   // Bool: Dependency auto()
+        shuffle: false,                   // Bool: ..
+        startAt: 0,                       // Integer [0...]:
+
+        // Keyboard navigation
+        keyboardControl: true,
+
+        // Autoplay
+        auto: true,                       // Bool: ..
         autoDelay: 5000,                  // Integer [0...]: ..
         pauseOnHover: false,              // Bool: ..
-        shuffle: false,                   // Bool: ..
 
         // Pagination
         directionNav: true,               // Bool: ..
@@ -567,12 +661,13 @@
         navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
 
         // Callbacks API
-        devBeforeSlide: function() {},    // API: Callback on ..
-        devAfterSlide: function() {},     // API: Callback on ..
-        devBeforeInit: function() {},     // API: Callback on ..
-        devAfterInit: function() {},      // API: Callback on ..
-        devOnPause: function() {},        // API: Callback on ..
-        devOnPlay: function() {}          // API: Callback on ..
+        devBeforeSlide: function( data )    {}, // API: Callback on ..
+        devAfterSlide:  function( data )    {}, // API: Callback on ..
+        devBeforeInit:  function( element ) {}, // API: Callback on ..
+        devAfterInit:   function( element ) {}, // API: Callback on ..
+        devOnDestroy:   function( data )    {}, // API: Callback on ..
+        devOnPause:     function( data )    {}, // API: Callback on ..
+        devOnPlay:      function( data )    {}  // API: Callback on ..
     };
 
 })(jQuery, window, document, undefined);
@@ -587,6 +682,7 @@ var slider = $('.my-slider').deviora({
     startAt: 0,
     directionNav: true,
     paginationNav: true,
+    preloadImages: 'visible',
     navigationText: ['prev', 'next'],
 
     devBeforeSlide: function () {
@@ -603,6 +699,10 @@ var slider = $('.my-slider').deviora({
 
     devOnPause: function() {
         console.log('dev: devOnPause() - Callback');
+    },
+
+    devOnDestroy: function() {
+        console.log('dev: devOnDestroy() - Callback', arguments);
     },
 
     devOnPlay: function() {
@@ -645,5 +745,12 @@ $('#goToSlide').click(function () {
     return false;
 });
 
+// $('#destroy').click(function () {
+//     slider.destroy();
+//     return false;
+// });
 
+
+
+// Do not go on about their desires, develop willpower.
 

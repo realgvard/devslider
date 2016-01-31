@@ -31,22 +31,6 @@ body {
     }
   }
 }
-
-//.dev-slides {
-//    padding: 0;
-//    margin: 0;
-//    list-style-type: none;
-//}
-//
-//.dev-slides:after {
-//    content: '.-.';
-//    display: block;
-//    clear: both;
-//    visibility: hidden;
-//    line-height: 0;
-//    height: 0;
-//}
-
 .my-slider {
 
   img {
@@ -75,20 +59,17 @@ body {
 
 }
 
-//
+// *********************
 // Direction Nav
-//
+// *********************
 
 .devslider-direction-nav {
-
   *height: 0;
 
   //
   // Global styles
   //
-
   a {
-
     text-decoration: none;
     display: block;
     width: 40px;
@@ -108,86 +89,51 @@ body {
     }
 
     &:before {
-
       font-family: "@{font-name}";
       font-size: 40px;
       display: inline-block;
-
     }
 
     &.devslider-next:before {
-
       // content: 'go !';
-
     }
-
   }
 
-  //
   // Prev
-  //
-
   .devslider-prev {
-
     left: 0;
-
   }
 
-  //
   // Next
-  //
-
   .devslider-next {
-
     right: 0;
     text-align: right;
-
   }
 
-  //
   // Hover states
-  //
-
   .flexslider:hover & {
-
     .flex-prev {
-
       opacity: 0.7;
       left: 10px;
-
       &:hover {
-
         opacity: 1;
-
       }
-
     }
 
     .flex-next {
-
       opacity: 0.7;
       right: 10px;
-
       &:hover {
-
         opacity: 1;
-
       }
-
     }
-
   }
 
-  //
   // Disabled
-  //
-
   .devslider-disabled {
-
     opacity: 0 !important;
     filter: alpha(opacity=0);
     cursor: default;
-
   }
 }
 
@@ -200,24 +146,45 @@ body {
 }
 
 .dev-bullet {
-
   &.dev-active {
     a {
       color: #ff314f;
     }
   }
-
 }
 
-.ken-burn-wrapper {
+// *********************
+// Ken Burn
+// *********************
+
+.dev-ken-burn-wrapper {
   width: 100%;
   height: 8px;
   position: absolute;
   top: 0;
   left: 0;
 }
-.ken-burn-progress {
+.dev-ken-burn-progress {
   width: auto;
   height: 100%;
   background: red;
+}
+
+
+.pubApi {
+  position: fixed;
+  top: 100px;
+  left: 10px;
+}
+.dev-preloader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -11px;
+  margin-left: -11px;
+  background: url(../../assets/images/spinner.gif) no-repeat;
+  background-size: cover;
+  width: 32px;
+  height: 32px;
+  z-index: 100;
 }
