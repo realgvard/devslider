@@ -170,12 +170,6 @@ body {
   background: red;
 }
 
-
-.pubApi {
-  position: fixed;
-  top: 100px;
-  left: 10px;
-}
 .dev-preloader {
   position: absolute;
   top: 50%;
@@ -187,4 +181,123 @@ body {
   width: 32px;
   height: 32px;
   z-index: 100;
+}
+
+/* Timers */
+
+.dev-bar-timer {
+  position: absolute;
+  width: 0;
+  height: 2px;
+  background: white;
+  border-bottom: 2px solid #555;
+  opacity: .55;
+  filter: alpha(opacity=55);
+  z-index: 4;
+  top: 0;
+}
+
+.dev-circle-timer {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 4;
+  opacity: .65;
+  filter: alpha(opacity=65);
+  // display: none;
+}
+
+.dev-ct-half {
+  background: white;
+}
+
+.dev-ct-center {
+  background: #444;
+}
+
+.dev-ct-left,
+.dev-ct-right {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dev-ct-left,
+.dev-ct-right {
+  float: left;
+  position: relative;
+}
+
+.dev-ct-rotate {
+  width: 200%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+.dev-ct-left .dev-ct-rotate,
+.dev-ct-right .dev-ct-hider,
+.dev-ct-right .dev-ct-half {
+  left: 0;
+}
+
+.dev-ct-right .dev-ct-rotate,
+.dev-ct-left .dev-ct-hider,
+.dev-ct-left .dev-ct-half {
+  right: 0;
+}
+
+.dev-ct-hider,
+.dev-ct-half {
+  position: absolute;
+  top: 0;
+}
+
+.dev-ct-hider {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dev-ct-half {
+  width: 200%;
+  height: 100%;
+}
+
+.dev-ct-center {
+  width: 50%;
+  height: 50%;
+  left: 25%;
+  top: 25%;
+  position: absolute;
+}
+
+.dev-ct-half,
+.dev-ct-center {
+  border-radius: 100px;
+  -moz-border-radius: 100px;
+  -webkit-border-radius: 100px;
+}
+
+
+/*------------------------------------*\
+    # TRASH
+\*------------------------------------*/
+
+.dev-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #fff;
+  z-index: 1;
+}
+.dev-block {
+  position: relative;
+}
+.pubApi {
+  position: fixed;
+  top: 100px;
+  left: 10px;
 }

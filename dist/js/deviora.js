@@ -352,13 +352,38 @@
                 progress: 0,
 
                 setup: function() {
-                    var $elementWrapper = $('<div class="' + namespace + 'ken-burn-wrapper">' +
-                            '<div class="' + namespace + 'ken-burn-progress"></div>' +
-                        '</div>');
+                    var $kenBurnContainer;
 
-                    slider.$kenBurn = $elementWrapper.find('.' + namespace + 'ken-burn-progress');
+                    if (slider.options.kenBurnType === 'bar') {
+                        $kenBurnContainer = $('<div class="' + namespace + 'ken-burn-wrapper">' +
+                                                '<div class="' + namespace + 'ken-burn-progress"></div>' +
+                                            '</div>');
+                        slider.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ken-burn-progress');
+                    }
+
+                    if (slider.options.kenBurnType === 'circle') {
+                        $kenBurnContainer = $('<div class="' + namespace + 'circle-timer"> ' +
+                                                '<div class="' + namespace + 'ct-left"> ' +
+                                                    '<div class="' + namespace + 'ct-rotate" style="transform: matrix(1, 0, 0, 1, 0, 0);"> ' +
+                                                        '<div class="' + namespace + 'ct-hider"> ' +
+                                                            '<div class="' + namespace + 'ct-half"></div> ' +
+                                                        '</div>' +
+                                                    '</div>' +
+                                                '</div>' +
+                                                '<div class="' + namespace + 'ct-right"> ' +
+                                                    '<div class="' + namespace + 'ct-rotate" style="transform: matrix(-1, 0, 0, -1, 0, 0);"> ' +
+                                                        '<div class="' + namespace + 'ct-hider"> ' +
+                                                            '<div class="' + namespace + 'ct-half"></div> ' +
+                                                        '</div>' +
+                                                    '</div>' +
+                                                '</div>' +
+                                                '<div class="' + namespace + 'ct-center"></div> ' +
+                                            '</div>');
+                        slider.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ct-rotate');
+                    }
+
                     methods.kenBurn.reset();
-                    slider.$viewport.prepend( $elementWrapper );
+                    slider.$viewport.prepend( $kenBurnContainer );
                 },
 
                 update: function() {
@@ -366,14 +391,41 @@
                         percent = (methods.autoPlay.spendTime / slider.options.autoDelay) * maxSize;
 
                     methods.kenBurn.progress = percent.toFixed(2) * 1;
-                    slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
+
+                    if (slider.options.kenBurnType === 'bar') {
+                        slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
+                    }
+
+                    if (slider.options.kenBurnType === 'circle') {
+                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : ''
+                        var CSS3Transform = pfxCSS3 + 'transform';
+                        var valueInDeg = 360 * methods.kenBurn.progress / 100;
+                        var isHalf = 360 / 2;
+
+                        console.log(CSS3Transform);
+                        if (valueInDeg >= isHalf) {
+                            slider.$kenBurn.eq(0).css(CSS3Transform, 'rotate(' + -(isHalf - valueInDeg) + 'deg)');
+                        } else {
+                            slider.$kenBurn.eq(1).css(CSS3Transform, 'rotate(' + valueInDeg + 'deg)');
+                        }
+                    }
                 },
 
                 reset: function() {
                     if (methods.kenBurn.progress !== 0) {
                         methods.kenBurn.progress = 0;
                     }
-                    slider.$kenBurn.width(0);
+                    if (slider.options.kenBurnType === 'bar') {
+                        slider.$kenBurn.width(0);
+                    }
+
+                    if (slider.options.kenBurnType === 'circle') {
+                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : '';
+                        var CSS3Transform = pfxCSS3 + 'transform';
+                        slider.$kenBurn.eq(0).css(CSS3Transform, 'rotate(0deg)');
+                        slider.$kenBurn.eq(1).css(CSS3Transform, 'rotate(0deg)');
+                    }
+
                 },
 
                 destroy: function() {}
@@ -409,7 +461,7 @@
                     var target = e.target,
                         posibleNodeNames = 'img iframe';
 
-                    if (!!target.closest('.' + namespace + 'viewport') &&
+                    if (!!target.closest('.' + namespace + 'viewport')                &&
                         posibleNodeNames.toUpperCase().indexOf(target.nodeName) != -1 &&
                         slider.options.preloadImages != 'visible') {
                         count += 1;
@@ -594,12 +646,20 @@
                 slider.options.devOnPlay();
             },
 
-            destroy: function() {
-                slider.destroy();
-
-                // API: On play click - Callback
-                slider.options.devOnDestroy();
+            getCurrentIndex: function() {
+                return slider.currentSlide;
             },
+
+            getSlidesCount: function() {
+                return slider.count;
+            },
+
+            // destroy: function() {
+            //     slider.destroy();
+
+            //     // API: On play click - Callback
+            //     slider.options.devOnDestroy();
+            // },
 
             goToNextSlide: function( index ) {
                 if (index !== slider.currentSlide) {
@@ -634,14 +694,18 @@
         slideSelector: '> li',            // String:
         animation: 'slide',               // String [slide, fade, bitches]:
         easing: 'ease',                   // String:
-        speed: 600,                       // Integer [0...]:
-        preloadImages: 'visible',         // String visible, all, false
+        speed: 600,                       // Integer: [0...]:
+        preloadImages: 'visible',         // String: visible, all, false
 
         // Mouse Events
         // touch: true,                      // Bool: ..
 
         // Usability features
         kenBurn: false,                   // Bool: Dependency auto()
+        kenBurnType: 'bar',               // String: bar, circle
+
+
+        // Usability features
         shuffle: false,                   // Bool: ..
         startAt: 0,                       // Integer [0...]:
 
@@ -676,6 +740,7 @@
 var slider = $('.my-slider').deviora({
     auto: true,
     kenBurn: true,
+    kenBurnType: 'circle',
     shuffle: false,
     autoDelay: 3500,
     pauseOnHover: true,
@@ -731,6 +796,8 @@ $('#prevTo').click(function () {
 
 $('#pause').click(function () {
     slider.pause();
+    console.log(slider.getCurrentIndex());
+    console.log(slider.getSlidesCount());
     return false;
 });
 
@@ -750,6 +817,12 @@ $('#goToSlide').click(function () {
 //     return false;
 // });
 
+
+var elem = document.querySelector('.btn');
+
+elem.addEventListener('tap', function() {
+    console.log('hi');
+}, false)
 
 
 // Do not go on about their desires, develop willpower.
