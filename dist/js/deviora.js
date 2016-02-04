@@ -18,8 +18,9 @@
             eventType = "click touchend MSPointerUp keyup",
             // msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
             // touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
+            pfxCSS3 = null;
             methods = {},
-            publickMethods;
+            publickMethods = {};
 
         // Add a reverse reference to the DOM object
         $.data(slider, shortNamespace + 'slider', slider);
@@ -65,14 +66,15 @@
                         prefixes = ['Moz', 'Webkit', 'o', 'MS'];
 
                     if (prop.toLowerCase() in div.style) {
+                        pfxCSS3 = '';
                         return true;
                     }
 
                     for ( var i = 0; i < prefixes.length; i++ ) {
                         if ((prefixes[i] + prop) in div.style) {
-                            // slider.pfx = '-' + prefixes[i].toLowerCase() + '-';
                             slider.pfx = prefixes[i];
                             supportedProp = prop;
+                            pfxCSS3 = '-' + slider.pfx.toLowerCase() + '-';
 
                             break;
                         }
@@ -87,6 +89,7 @@
                         return false;
                     }
                 })();
+
 
                 // API: Before init - Callback
                 slider.options.devBeforeInit();
@@ -136,7 +139,6 @@
                     methods.loadElements(preloadElements, methods.start);
                 } else {
                     methods.start();
-                    console.log('yes');
                 }
             },
 
@@ -171,18 +173,36 @@
                     if (slider.options.animation === 'slide') {
                         slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
                             .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
-                    }
 
-                    $(slider.options.slideSelector, slider)
-                        .css({
-                            'float': 'left',
-                            'width': slider.$wrapper.width(),
-                            'display': 'block'
+                        $(slider.options.slideSelector, slider)
+                            .css({
+                                'float': 'left',
+                                'width': slider.$wrapper.width(),
+                                'display': 'block'
+                            });
+
+                        slider.css({
+                            'width': (100 * (slider.count + slider.cloneCount)) + '%'
+                        });
+                    } else if (slider.options.animation === 'fade') {
+                        slider.css({
+                            'height': slider.height() + 'px'
                         });
 
-                    slider.css({
-                        'width': (100 * (slider.count + slider.cloneCount)) + '%'
-                    });
+                        slider.$slides.css({
+                            'width': '100%',
+                            'height': '100%',
+                            'position': 'absolute',
+                            'display': 'block',
+                            // 'overflow': 'hidden',
+                            // 'visibility': 'visible',
+                            'left': 0,
+                            'top': 0,
+                            'z-index': 1,
+                            'opacity': 0
+                        });
+                    }
+
                 },
 
                 // Build our slider with HTML
@@ -207,19 +227,25 @@
                 },
 
                 setStartSlide: function( index ) {
-                    var widthViewport = slider.width() / (slider.count + slider.cloneCount),
-                        origin = -(widthViewport * (index + (slider.cloneCount / 2))) + 'px';
+                    if(slider.options.animation === 'slide') {
+                        var widthViewport = slider.width() / (slider.count + slider.cloneCount),
+                            origin = -(widthViewport * (index + (slider.cloneCount / 2))) + 'px';
 
-                    if (slider.transitions) {
-                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : '',
-                            CSS3Transition = 'transition',
-                            CSS3Transform = pfxCSS3 + 'transform';
+                        if (slider.transitions) {
+                            var CSS3Transition = 'transition',
+                                CSS3Transform = pfxCSS3 + 'transform';
 
-                        slider.css(CSS3Transition, '');
-                        slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
-                    } else {
-                        slider.css('marginLeft', origin);
+                            slider.css(CSS3Transition, '');
+                            slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
+                        } else {
+                            slider.css('marginLeft', origin);
+                        }
                     }
+
+                    if(slider.options.animation === 'fade') {
+                        slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2, 'opacity': 1 });
+                    }
+
                 },
 
                 setActive: function() {
@@ -397,14 +423,12 @@
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
-                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : ''
-                        var CSS3Transform = pfxCSS3 + 'transform';
-                        var valueInDeg = 360 * methods.kenBurn.progress / 100;
-                        var isHalf = 360 / 2;
+                        var CSS3Transform = pfxCSS3 + 'transform',
+                            valueInDeg = 360 * methods.kenBurn.progress / 100,
+                            halfValue = 360 / 2;
 
-                        console.log(CSS3Transform);
-                        if (valueInDeg >= isHalf) {
-                            slider.$kenBurn.eq(0).css(CSS3Transform, 'rotate(' + -(isHalf - valueInDeg) + 'deg)');
+                        if (valueInDeg >= halfValue) {
+                            slider.$kenBurn.eq(0).css(CSS3Transform, 'rotate(' + -(halfValue - valueInDeg) + 'deg)');
                         } else {
                             slider.$kenBurn.eq(1).css(CSS3Transform, 'rotate(' + valueInDeg + 'deg)');
                         }
@@ -420,7 +444,6 @@
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
-                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : '';
                         var CSS3Transform = pfxCSS3 + 'transform';
                         slider.$kenBurn.eq(0).css(CSS3Transform, 'rotate(0deg)');
                         slider.$kenBurn.eq(1).css(CSS3Transform, 'rotate(0deg)');
@@ -476,12 +499,12 @@
         // Group animations in one object
         slider.animationStore = {
             slideSingleItem: function( params ) {
-                var widthViewport = slider.width() / (slider.count + slider.cloneCount),
-                    currentSlide = params.currentSlide,
-                    origin;
-
-
                 if (slider.animating === false) {
+                    var widthViewport = slider.width() / (slider.count + slider.cloneCount),
+                        currentSlide = params.currentSlide,
+                        origin;
+
+
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
 
@@ -500,8 +523,7 @@
                     slider.animating = true;
 
                     if (slider.transitions) {
-                        var pfxCSS3 = (slider.pfx) ? '-' + slider.pfx.toLowerCase() + '-' : '',
-                            CSS3Transition = 'transition',
+                        var CSS3Transition = 'transition',
                             CSS3Transform = pfxCSS3 + 'transform',
                             transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
@@ -513,9 +535,61 @@
                             slider.animationStore.onEndAnimate();
                         });
                     } else {
-                        slider.animate({ 'marginLeft': origin }, slider.options.speed, slider.options.easing, function animationEnd() {
+                        slider.animate({ 'marginLeft': origin }, {
+                            duration: slider.options.speed,
+                            specialEasing: {
+                                'marginLeft': slider.options.easing
+                            },
+                            complete: function() {
+                                slider.animationStore.onEndAnimate();
+                            }
+                        });
+                    }
+                }
+            },
+
+            fadeSingleItem: function ( params ) {
+                if (slider.animating === false) {
+                    var currentSlide = params.currentSlide,
+                        $currentItem = slider.$slides.eq(currentSlide),
+                        $prevItem = slider.$slides.eq(slider.currentSlide);
+
+
+                    // API: Before slide - Callback
+                    slider.options.devBeforeSlide();
+
+
+                    slider.prevItem = slider.currentSlide;
+                    slider.currentSlide = currentSlide;
+                    slider.animating = true;
+
+                    if (slider.transitions) {
+                        var CSS3Transition = 'transition',
+                            transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
+
+                        $currentItem.css(CSS3Transition, 'opacity ' + slider.options.speed + 'ms');
+                        $prevItem.css(CSS3Transition, 'opacity ' + slider.options.speed + 'ms');
+
+                        $prevItem.css({ 'opacity': 0, 'zIndex': 1 });
+                        $currentItem.css({ 'opacity': 1, 'zIndex': 2 });
+
+                        $currentItem.on(transitionEnd, function() {
+                            slider.off(transitionEnd);
                             slider.animationStore.onEndAnimate();
                         });
+                    } else {
+                        $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, slider.options.easing);
+
+                        $currentItem.css('zIndex', 2)
+                            .animate({ 'opacity': 1 }, {
+                                duration: slider.options.speed,
+                                specialEasing: {
+                                    'marginLeft': slider.options.easing
+                                },
+                                complete: function() {
+                                    slider.animationStore.onEndAnimate();
+                                }
+                            });
                     }
                 }
             },
@@ -541,9 +615,6 @@
                 slider.options.devAfterSlide();
             },
 
-            fadeSingleItem: function () {
-
-            },
 
             /**
              * Description: call objects which encapsulate actions and parameters.
@@ -692,8 +763,8 @@
         // Most important dev features
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
-        animation: 'slide',               // String [slide, fade, bitches]:
-        easing: 'ease',                   // String:
+        animation: 'slide',               // String [slide, fade]:
+        easing: 'swing',                  // String:
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
 
@@ -740,11 +811,13 @@
 var slider = $('.my-slider').deviora({
     auto: true,
     kenBurn: true,
+    animation: 'fade',
     kenBurnType: 'circle',
     shuffle: false,
     autoDelay: 3500,
+    speed: 1200,
     pauseOnHover: true,
-    startAt: 0,
+    startAt: 1,
     directionNav: true,
     paginationNav: true,
     preloadImages: 'visible',
@@ -812,17 +885,6 @@ $('#goToSlide').click(function () {
     return false;
 });
 
-// $('#destroy').click(function () {
-//     slider.destroy();
-//     return false;
-// });
-
-
-var elem = document.querySelector('.btn');
-
-elem.addEventListener('tap', function() {
-    console.log('hi');
-}, false)
 
 
 // Do not go on about their desires, develop willpower.
