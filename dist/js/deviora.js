@@ -152,6 +152,10 @@
                     methods.autoPlay.start();
                 }
 
+                if (slider.options.keyboardNavigation) {
+                    methods.setupKeyboardNavigation();
+                }
+
                 if (slider.options.auto && slider.options.pauseOnHover) {
                     slider.hover(function onMouseEnter() {
                         if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
@@ -452,6 +456,23 @@
                 },
 
                 destroy: function() {}
+            },
+
+            setupKeyboardNavigation: function() {
+                $(document).keydown(function(e) {
+                    if (!slider.animating && slider.initialized) {
+
+                        // Left -> prev()
+                        if (e.keyCode == 37) {
+                            publickMethods.prevSlide();
+                        }
+
+                        // Right -> next()
+                        if (e.keyCode == 39) {
+                            publickMethods.nextSlide();
+                        }
+                    }
+                });
             },
 
             loadElements: function(elements, callback){
@@ -794,6 +815,9 @@
         // Navigation
         paginationNav: true,              // Bool: ..
         navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
+
+        // Keyboard
+        keyboardNavigation: true,         // Bool: ..
 
         // Callbacks API
         devBeforeSlide: function( data )    {}, // API: Callback on ..
