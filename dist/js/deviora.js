@@ -119,9 +119,25 @@
                     }
                     if (slider.options.preloadImages === 'all') {
                         preloadElements = slider.$slides;
-
                     }
                 }
+
+                if (slider.options.keyboardNavigation) {
+                    methods.setupKeyboardNavigation();
+                }
+
+                // TODO: Need check all cases with hover of different components.
+                slider.$viewport.hover(function onMouseEnter() {
+                    if (slider.options.auto && slider.options.pauseOnHover) {
+                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
+                    }
+                    slider.addClass(namespace + 'hovered');
+                }, function onMouseLeave() {
+                    if (slider.options.auto && slider.options.pauseOnHover) {
+                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
+                    }
+                    slider.removeClass(namespace + 'hovered');
+                });
 
                 // Append collection build items
                 slider.before( slider.$wrapper );
@@ -129,6 +145,7 @@
                 slider.$viewport.prepend( slider );
                 // End build shell slider
 
+                // Set to slider default props
                 methods.shell.setup();
                 // Set active slide
                 slider.setActive();
@@ -143,6 +160,7 @@
             },
 
             start: function() {
+                // Remove preloader
                 if(!!slider.options.preloadImages) {
                     slider.$preloader.remove();
                 }
@@ -152,28 +170,42 @@
                     methods.autoPlay.start();
                 }
 
-                if (slider.options.keyboardNavigation) {
-                    methods.setupKeyboardNavigation();
-                }
-
-                if (slider.options.auto && slider.options.pauseOnHover) {
-                    slider.hover(function onMouseEnter() {
-                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
-                    }, function onMouseLeave() {
-                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
-                    });
-                }
-
+                slider.initialized = true;
                 slider.$viewport.addClass(shortNamespace + 'slider-initialised');
 
                 // API: After init - Callback
                 slider.options.devAfterInit();
-                slider.initialized = true;
             },
 
             shell: {
                 // Setup default styles
                 setup: function() {
+                    if (slider.options.fullScreen === true && slider.options.animation == 'fade') {
+                        var $window = $(window),
+                            heightWindow = $window.height(),
+                            offsetY = slider.options.fullScreenOffsetY.length != null ? slider.options.fullScreenOffsetY.height() : slider.options.fullScreenOffsetY;
+
+                        slider.$slides.width( $window.width() );
+
+                        if (slider.options.minFullScreenHeight <= heightWindow) {
+                            slider.$wrapper.height( heightWindow - offsetY );
+                        } else {
+                            slider.$wrapper.height( slider.options.minFullScreenHeight - offsetY );
+                        }
+
+                        $window.resize(function(){
+                            if (!slider.animating) {
+                                var height = $window.height();
+
+                                if (slider.options.minFullScreenHeight <= height) {
+                                    slider.$wrapper.height( height - offsetY );
+                                } else {
+                                    slider.$wrapper.height( slider.options.minFullScreenHeight - offsetY );
+                                }
+                            }
+                        });
+                    }
+
                     if (slider.options.animation === 'slide') {
                         slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
                             .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
@@ -182,6 +214,7 @@
                             .css({
                                 'float': 'left',
                                 'width': slider.$wrapper.width(),
+                                // 'height': '100%',
                                 'display': 'block'
                             });
 
@@ -189,9 +222,15 @@
                             'width': (100 * (slider.count + slider.cloneCount)) + '%'
                         });
                     } else if (slider.options.animation === 'fade') {
-                        slider.css({
-                            'height': slider.height() + 'px'
-                        });
+                        var maxHeight = Math.max.apply(Math, $(slider.$slides).map(function() {
+                            return $(this).height();
+                        }));
+
+                        if (slider.options.fullScreen === false) {
+                            slider.css({
+                                'height': maxHeight + 'px'
+                            });
+                        }
 
                         slider.$slides.css({
                             'width': '100%',
@@ -206,7 +245,6 @@
                             'opacity': 0
                         });
                     }
-
                 },
 
                 // Build our slider with HTML
@@ -238,7 +276,7 @@
                         if (slider.transitions) {
                             var CSS3Transition = 'transition',
                                 CSS3Transform = pfxCSS3 + 'transform';
-
+// console.log(origin);
                             slider.css(CSS3Transition, '');
                             slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
                         } else {
@@ -249,7 +287,6 @@
                     if(slider.options.animation === 'fade') {
                         slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2, 'opacity': 1 });
                     }
-
                 },
 
                 setActive: function() {
@@ -789,22 +826,19 @@
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
 
-        // Mouse Events
+        // Mouse events
         // touch: true,                      // Bool: ..
 
-        // Usability features
-        kenBurn: false,                   // Bool: Dependency auto()
-        kenBurnType: 'bar',               // String: bar, circle
 
-
-        // Usability features
-        shuffle: false,                   // Bool: ..
-        startAt: 0,                       // Integer [0...]:
+        // Full screen
+        fullScreen: false,                // Bool: ..
+        fullScreenOffsetY: 0,             // [jQuery Obj, Int, String]: ..
+        minFullScreenHeight: 0,           // [Int, String]: ..
 
         // Keyboard navigation
         keyboardControl: true,
 
-        // Autoplay
+        // Auto play
         auto: true,                       // Bool: ..
         autoDelay: 5000,                  // Integer [0...]: ..
         pauseOnHover: false,              // Bool: ..
@@ -819,12 +853,23 @@
         // Keyboard
         keyboardNavigation: true,         // Bool: ..
 
+        // kenBurn
+        kenBurn: false,                   // Bool: Dependency auto()
+        kenBurnType: 'bar',               // String: bar, circle
+
+        // Usability features
+        shuffle: false,                   // Bool: ..
+        startAt: 0,                       // Integer [0...]:
+        autoHeight: false,                // Bool: ..
+        startHeight: 0,                   // [jQuery Obj, Int, String]: ..
+
+
         // Callbacks API
         devBeforeSlide: function( data )    {}, // API: Callback on ..
         devAfterSlide:  function( data )    {}, // API: Callback on ..
         devBeforeInit:  function( element ) {}, // API: Callback on ..
         devAfterInit:   function( element ) {}, // API: Callback on ..
-        devOnDestroy:   function( data )    {}, // API: Callback on ..
+        // devOnDestroy:   function( data )    {}, // API: Callback on ..
         devOnPause:     function( data )    {}, // API: Callback on ..
         devOnPlay:      function( data )    {}  // API: Callback on ..
     };
@@ -836,12 +881,19 @@ var slider = $('.my-slider').deviora({
     auto: true,
     kenBurn: true,
     animation: 'fade',
-    kenBurnType: 'circle',
+    kenBurnType: 'bar',
     shuffle: false,
     autoDelay: 3500,
     speed: 1200,
     pauseOnHover: true,
-    startAt: 1,
+
+    fullScreen: true,
+    minFullScreenHeight: 350,
+    fullScreenOffsetY: $('.my-header'),
+
+    smoothHeight: true,
+
+    startAt: 0,
     directionNav: true,
     paginationNav: true,
     preloadImages: 'visible',
@@ -863,9 +915,9 @@ var slider = $('.my-slider').deviora({
         console.log('dev: devOnPause() - Callback');
     },
 
-    devOnDestroy: function() {
-        console.log('dev: devOnDestroy() - Callback', arguments);
-    },
+    // devOnDestroy: function() {
+    //     console.log('dev: devOnDestroy() - Callback', arguments);
+    // },
 
     devOnPlay: function() {
         console.log('dev: devOnPlay() - Callback');

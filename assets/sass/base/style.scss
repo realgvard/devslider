@@ -4,18 +4,17 @@ body {
 }
 
 .dev-wrapper {
-  width: 700px;
+  // width: 700px;
   margin: 0 auto;
-}
-
-.devslider-container {
-  width: 1300px;
-  overflow: hidden;
-  margin: 0 auto;
+  width: 100%;
   position: relative;
 }
 
 .dev-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
   > ul {
     padding: 0;
     margin: 0;
@@ -163,6 +162,7 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 10;
 }
 .dev-ken-burn-progress {
   width: auto;
@@ -300,4 +300,8 @@ body {
   position: fixed;
   top: 100px;
   left: 10px;
+  width: auto;
+}
+.my-header {
+  height: 50px;
 }
