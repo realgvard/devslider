@@ -180,6 +180,19 @@
             shell: {
                 // Setup default styles
                 setup: function() {
+                    if (slider.options.startHeight != 0) {
+                        var startHeight = slider.options.startHeight.length != null ? slider.options.startHeight.height() : slider.options.startHeight;
+                        if (slider.options.fullScreen === true) {
+                            if (slider.options.startHeight > slider.options.minFullScreenHeight) {
+                                slider.$wrapper.height( startHeight );
+                            } else {
+                                slider.$wrapper.height( slider.options.minFullScreenHeight );
+                            }
+                        } else {
+                            slider.$wrapper.height( startHeight );
+                        }
+                    };
+
                     if (slider.options.fullScreen === true && slider.options.animation == 'fade') {
                         var $window = $(window),
                             heightWindow = $window.height(),
@@ -187,10 +200,12 @@
 
                         slider.$slides.width( $window.width() );
 
-                        if (slider.options.minFullScreenHeight <= heightWindow) {
-                            slider.$wrapper.height( heightWindow - offsetY );
-                        } else {
-                            slider.$wrapper.height( slider.options.minFullScreenHeight - offsetY );
+                        if (slider.options.startHeight == 0) {
+                            if (slider.options.minFullScreenHeight <= heightWindow) {
+                                slider.$wrapper.height( heightWindow - offsetY );
+                            } else {
+                                slider.$wrapper.height( slider.options.minFullScreenHeight - offsetY );
+                            }
                         }
 
                         $window.resize(function(){
@@ -232,9 +247,13 @@
                             });
                         }
 
+                        if(!slider.options.smoothHeight) {
+                            slider.$slides.css('height', '100%');
+                        }
+
                         slider.$slides.css({
                             'width': '100%',
-                            'height': '100%',
+                            // 'height': '100%',
                             'position': 'absolute',
                             'display': 'block',
                             // 'overflow': 'hidden',
@@ -585,6 +604,7 @@
                             CSS3Transform = pfxCSS3 + 'transform',
                             transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
+                        slider.animationStore.onStartAnimate();
                         slider.css(CSS3Transition, 'transform ' + slider.options.speed + 'ms');
                         slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
 
@@ -593,6 +613,8 @@
                             slider.animationStore.onEndAnimate();
                         });
                     } else {
+                        slider.animationStore.onStartAnimate();
+
                         slider.animate({ 'marginLeft': origin }, {
                             duration: slider.options.speed,
                             specialEasing: {
@@ -625,6 +647,7 @@
                         var CSS3Transition = 'transition',
                             transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
+                        slider.animationStore.onStartAnimate();
                         $currentItem.css(CSS3Transition, 'opacity ' + slider.options.speed + 'ms');
                         $prevItem.css(CSS3Transition, 'opacity ' + slider.options.speed + 'ms');
 
@@ -636,6 +659,7 @@
                             slider.animationStore.onEndAnimate();
                         });
                     } else {
+                        slider.animationStore.onStartAnimate();
                         $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, slider.options.easing);
 
                         $currentItem.css('zIndex', 2)
@@ -649,6 +673,12 @@
                                 }
                             });
                     }
+                }
+            },
+
+            onStartAnimate: function() {
+                if (slider.options.smoothHeight) {
+                    slider.setSmoothHeight();
                 }
             },
 
@@ -730,6 +760,12 @@
             }
 
             // console.log('dev: slider.play()');
+        };
+
+        slider.setSmoothHeight = function() {
+            slider.$wrapper.animate({
+                'height': slider.$slides.eq(slider.currentSlide).height()
+            }, slider.options.speed);
         };
 
         // slider.destroy = function() {
@@ -860,6 +896,7 @@
         // Usability features
         shuffle: false,                   // Bool: ..
         startAt: 0,                       // Integer [0...]:
+        autoHeightSpeed: 1200,            // Int: ..
         autoHeight: false,                // Bool: ..
         startHeight: 0,                   // [jQuery Obj, Int, String]: ..
 
@@ -884,7 +921,7 @@ var slider = $('.my-slider').deviora({
     kenBurnType: 'bar',
     shuffle: false,
     autoDelay: 3500,
-    speed: 1200,
+    speed: 1500,
     pauseOnHover: true,
 
     fullScreen: true,
@@ -892,6 +929,7 @@ var slider = $('.my-slider').deviora({
     fullScreenOffsetY: $('.my-header'),
 
     smoothHeight: true,
+    startHeight: 400,
 
     startAt: 0,
     directionNav: true,
