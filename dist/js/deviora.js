@@ -90,6 +90,11 @@
                     }
                 })();
 
+                // TODO: Collect all possible props in one object.
+                slider.browser = {
+                    sex: '1'
+                };
+
 
                 // API: Before init - Callback
                 slider.options.devBeforeInit();
@@ -124,6 +129,10 @@
 
                 if (slider.options.keyboardNavigation) {
                     methods.setupKeyboardNavigation();
+                }
+
+                if(slider.options.touch) {
+                    methods.gestures.setupEvents();
                 }
 
                 // TODO: Need check all cases with hover of different components.
@@ -175,6 +184,88 @@
 
                 // API: After init - Callback
                 slider.options.devAfterInit();
+
+                console.log(slider);
+            },
+
+            gestures: {
+                setupEvents: function() {
+                    var locals = {
+                        offsetX       : 0,
+                        offsetY       : 0,
+                        baseElWidth   : 0,
+                        relativePos   : 0,
+                        position      : null,
+                        minSwipe      : null,
+                        maxSwipe      : null,
+                        sliding       : null,
+                        dargging      : null,
+                        targetElement : null
+                    };
+
+                    var types = [
+                        'touchstart.dev',
+                        'touchmove.dev',
+                        'touchend.dev'
+                    ];
+
+                    slider.events = {}
+                    slider.events.start = types[0];
+                    slider.events.move = types[1];
+                    slider.events.end = types[2];
+
+                    function getTouches(e) {
+                        if (e.touches !== undefined) {
+                            return {
+                                x: e.touches[0].pageX,
+                                y: e.touches[0].pageY
+                            }
+                        }
+
+                        if (e.touches === undefined) {
+                            if (e.pageX !== undefined) {
+                                return {
+                                    x : e.pageX,
+                                    y : e.pageY
+                                };
+                            }
+                            if (e.pageX === undefined) {
+                                return {
+                                    x : e.clientX,
+                                    y : e.clientY
+                                };
+                            }
+                        }
+                    };
+
+                    // TODO: Make event types on variables, it's make possible keep cross-browser.
+                    function swapEvents( prop ) {
+                        if (prop === 'on') {
+                            $(document).on(slider.events.move, dragMove);
+                            $(document).on(slider.events.end, dragEnd);
+                        } else if (prop === 'off') {
+                            $(document).off(slider.events.move);
+                            $(document).off(slider.events.end);
+                        }
+                    }
+
+
+                    function onTouchStart() {
+                        swapEvents('on');
+
+                    }
+
+                    function onTouchMove() {
+
+                    }
+
+                    function onTouchEnd() {
+
+                        swapEvents('off');
+                    }
+
+                    slider.$viewport.on(slider.events.start, onTouchStart);
+                }
             },
 
             shell: {
@@ -191,7 +282,7 @@
                         } else {
                             slider.$wrapper.height( startHeight );
                         }
-                    };
+                    }
 
                     if (slider.options.fullScreen === true && slider.options.animation == 'fade') {
                         var $window = $(window),
@@ -256,8 +347,8 @@
                             // 'height': '100%',
                             'position': 'absolute',
                             'display': 'block',
-                            // 'overflow': 'hidden',
-                            // 'visibility': 'visible',
+                            'overflow': 'hidden',
+                            'visibility': 'visible',
                             'left': 0,
                             'top': 0,
                             'z-index': 1,
@@ -295,7 +386,7 @@
                         if (slider.transitions) {
                             var CSS3Transition = 'transition',
                                 CSS3Transform = pfxCSS3 + 'transform';
-// console.log(origin);
+
                             slider.css(CSS3Transition, '');
                             slider.css(CSS3Transform, 'translate3d(' + origin + ', 0, 0)');
                         } else {
@@ -423,6 +514,7 @@
                         if (methods.autoPlay.spendTime <= slider.options.autoDelay) {
                             slider.autoTimeout = requestAnimationFrame(methods.autoPlay.run);
                         } else {
+                            cancelAnimationFrame(slider.autoTimeout);
                             slider.animateSlides();
                         }
                     }
@@ -450,14 +542,14 @@
                     if (slider.options.kenBurnType === 'circle') {
                         $kenBurnContainer = $('<div class="' + namespace + 'circle-timer"> ' +
                                                 '<div class="' + namespace + 'ct-left"> ' +
-                                                    '<div class="' + namespace + 'ct-rotate" style="transform: matrix(1, 0, 0, 1, 0, 0);"> ' +
+                                                    '<div class="' + namespace + 'ct-rotate"> ' +
                                                         '<div class="' + namespace + 'ct-hider"> ' +
                                                             '<div class="' + namespace + 'ct-half"></div> ' +
                                                         '</div>' +
                                                     '</div>' +
                                                 '</div>' +
                                                 '<div class="' + namespace + 'ct-right"> ' +
-                                                    '<div class="' + namespace + 'ct-rotate" style="transform: matrix(-1, 0, 0, -1, 0, 0);"> ' +
+                                                    '<div class="' + namespace + 'ct-rotate"> ' +
                                                         '<div class="' + namespace + 'ct-hider"> ' +
                                                             '<div class="' + namespace + 'ct-half"></div> ' +
                                                         '</div>' +
@@ -465,6 +557,7 @@
                                                 '</div>' +
                                                 '<div class="' + namespace + 'ct-center"></div> ' +
                                             '</div>');
+
                         slider.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ct-rotate');
                     }
 
@@ -480,6 +573,7 @@
 
                     if (slider.options.kenBurnType === 'bar') {
                         slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
+                        // console.log(methods.kenBurn.progress);
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
@@ -499,6 +593,7 @@
                     if (methods.kenBurn.progress !== 0) {
                         methods.kenBurn.progress = 0;
                     }
+
                     if (slider.options.kenBurnType === 'bar') {
                         slider.$kenBurn.width(0);
                     }
@@ -763,7 +858,7 @@
         };
 
         slider.setSmoothHeight = function() {
-            slider.$wrapper.animate({
+            slider.$viewport.animate({
                 'height': slider.$slides.eq(slider.currentSlide).height()
             }, slider.options.speed);
         };
@@ -775,15 +870,15 @@
         // };
 
         slider.getIndexCalcDir = function(dir) {
-          slider.direction = dir;
-          if (dir === 'next') {
-            return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
-          } else {
-            return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
-          }
+            slider.direction = dir;
+            if (dir === 'next') {
+                return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
+            } else {
+                return (slider.currentSlide === 0) ? slider.lastItem : slider.currentSlide - 1;
+            }
         };
 
-
+        // It's method can be use in inside own slider.
         publickMethods = {
             nextSlide: function() {
                 var target = slider.getIndexCalcDir('next');
@@ -863,8 +958,7 @@
         preloadImages: 'visible',         // String: visible, all, false
 
         // Mouse events
-        // touch: true,                      // Bool: ..
-
+        touch: true,                      // Bool: ..
 
         // Full screen
         fullScreen: false,                // Bool: ..
