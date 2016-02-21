@@ -58,42 +58,7 @@
                 slider.isPlaying = false;
 
 
-                // Touch / UseCSS:
-                slider.transitions = (function() {
-                    var supportedProp,
-                        div = document.createElement('div'),
-                        prop = 'Transition',
-                        prefixes = ['Moz', 'Webkit', 'o', 'MS'];
-
-                    if (prop.toLowerCase() in div.style) {
-                        pfxCSS3 = '';
-                        return true;
-                    }
-
-                    for ( var i = 0; i < prefixes.length; i++ ) {
-                        if ((prefixes[i] + prop) in div.style) {
-                            slider.pfx = prefixes[i];
-                            supportedProp = prop;
-                            pfxCSS3 = '-' + slider.pfx.toLowerCase() + '-';
-
-                            break;
-                        }
-                    }
-
-                    // Avoid memory leak in IE
-                    div = null;
-
-                    if (supportedProp) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                })();
-
-                // TODO: Collect all possible props in one object.
-                slider.browser = {
-                    sex: '1'
-                };
+                methods.checkBrowser();
 
 
                 // API: Before init - Callback
@@ -131,10 +96,6 @@
                     methods.setupKeyboardNavigation();
                 }
 
-                if(slider.options.touch) {
-                    methods.gestures.setupEvents();
-                }
-
                 // TODO: Need check all cases with hover of different components.
                 slider.$viewport.hover(function onMouseEnter() {
                     if (slider.options.auto && slider.options.pauseOnHover) {
@@ -159,6 +120,15 @@
                 // Set active slide
                 slider.setActive();
                 methods.shell.setStartSlide( slider.currentSlide );
+
+                if(slider.options.touch) {
+                    slider.touchData = {
+                        newPosX: null,
+                        newRelativeX: null,
+                        maximum: (slider.count * slider.sliderWidth) * -1
+                    };
+                    methods.gestures.setupEvents();
+                }
 
                 // define load images
                 if(!!slider.options.preloadImages) {
@@ -185,7 +155,83 @@
                 // API: After init - Callback
                 slider.options.devAfterInit();
 
-                console.log(slider);
+                // console.log(slider);
+            },
+
+            checkBrowser : function() {
+                var isTouch = 'ontouchstart' in window || window.navigator.msMaxTouchPoints;
+
+                // Touch / UseCSS:
+                slider.transitions = (function() {
+                    var supportedProp,
+                        div = document.createElement('div'),
+                        prop = 'Transition',
+                        prefixes = ['Moz', 'Webkit', 'o', 'MS'];
+
+                    if (prop.toLowerCase() in div.style) {
+                        pfxCSS3 = '';
+                        return true;
+                    }
+
+                    for ( var i = 0; i < prefixes.length; i++ ) {
+                        if ((prefixes[i] + prop) in div.style) {
+                            slider.pfx = prefixes[i];
+                            supportedProp = prop;
+                            pfxCSS3 = '-' + slider.pfx.toLowerCase() + '-';
+
+                            break;
+                        }
+                    }
+
+                    // Avoid memory leak in IE
+                    div = null;
+
+                    if (supportedProp) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                })();
+
+                // TODO: Collect all possible props in one object.
+                slider.browser = {
+                    isTouch: isTouch
+                };
+            },
+
+            getRemoveTransition: function() {
+                var sender = {},
+                    prop = pfxCSS3 + 'transition';
+
+                sender[prop] = '';
+
+                return sender;
+            },
+
+            getTranslate: function( posX ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'translate3d(' + posX + 'px, 0px, 0px)';
+
+                return sender;
+            },
+
+            getRotate: function( deg ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'rotate(' + deg + 'deg)';
+
+                return sender;
+            },
+
+            doTranslate: function( posX ) {
+                slider.css( methods.getTranslate(posX) );
+            },
+
+            doCss2move : function( posX ) {
+                slider.css('marginLeft', posX);
             },
 
             gestures: {
@@ -203,36 +249,41 @@
                         targetElement : null
                     };
 
+                    // var types = [
+                    //     'touchstart.dev',
+                    //     'touchmove.dev',
+                    //     'touchend.dev'
+                    // ];
+
                     var types = [
-                        'touchstart.dev',
-                        'touchmove.dev',
-                        'touchend.dev'
+                        'mousedown.dev',
+                        'mousemove.dev',
+                        'mouseup.dev'
                     ];
 
                     slider.events = {}
                     slider.events.start = types[0];
-                    slider.events.move = types[1];
-                    slider.events.end = types[2];
+                    slider.events.move  = types[1];
+                    slider.events.end   = types[2];
 
-                    function getTouches(e) {
-                        if (e.touches !== undefined) {
+                    function getTouches( event ) {
+                        if (event.touches !== undefined) {
                             return {
-                                x: e.touches[0].pageX,
-                                y: e.touches[0].pageY
+                                x: event.touches[0].pageX,
+                                y: event.touches[0].pageY
                             }
                         }
-
-                        if (e.touches === undefined) {
-                            if (e.pageX !== undefined) {
+                        if (event.touches === undefined) {
+                            if (event.pageX !== undefined) {
                                 return {
-                                    x : e.pageX,
-                                    y : e.pageY
+                                    x: event.pageX,
+                                    y: event.pageY
                                 };
                             }
-                            if (e.pageX === undefined) {
+                            if (event.pageX === undefined) {
                                 return {
-                                    x : e.clientX,
-                                    y : e.clientY
+                                    x: event.clientX,
+                                    y: event.clientY
                                 };
                             }
                         }
@@ -241,8 +292,8 @@
                     // TODO: Make event types on variables, it's make possible keep cross-browser.
                     function swapEvents( prop ) {
                         if (prop === 'on') {
-                            $(document).on(slider.events.move, dragMove);
-                            $(document).on(slider.events.end, dragEnd);
+                            $(document).on(slider.events.move, onTouchMove);
+                            $(document).on(slider.events.end, onTouchEnd);
                         } else if (prop === 'off') {
                             $(document).off(slider.events.move);
                             $(document).off(slider.events.end);
@@ -250,17 +301,120 @@
                     }
 
 
-                    function onTouchStart() {
+                    function onTouchStart( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            position;
+
+                        // TODO: WTF !????
+                        if (e.which === 2 || e.which === 3 || slider.animating) {
+                            return false;
+                        }
+
+                        // block drag img element
+                        e.preventDefault();
+
+                        if (slider.options.auto !== false) {
+                            slider.pause();
+                        }
+
+                        slider.touchData.newPosX = 0;
+                        slider.touchData.newRelativeX = 0;
+
+                        slider.css( methods.getRemoveTransition() );
+
+                        position = slider.position();
+
+                        locals.relativePos = position.left;
+                        locals.offsetX = getTouches(e).x - position.left;
+                        locals.offsetY = getTouches(e).y - position.top;
+
+                        console.log(slider.touchData, slider.count, slider.sliderWidth);
                         swapEvents('on');
 
+                        locals.sliding = false;
+                        locals.targetElement = e.target || e.srcElement;
+                        // console.log(position);
                     }
 
-                    function onTouchMove() {
+                    function onTouchMove( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            minSwipe,
+                            maxSwipe;
 
+                        slider.touchData.newPosX = getTouches(e).x - locals.offsetX;
+                        slider.touchData.newPosY = getTouches(e).y - locals.offsetY;
+                        slider.touchData.newRelativeX = slider.touchData.newPosX - locals.relativePos;
+
+                        if (locals.dragging !== true && slider.touchData.newRelativeX !== 0) {
+                            locals.dragging = true;
+
+                            // TODO: Make callback
+                        }
+
+                        // TODO: check on mobile ! (Only for mobile)
+                        if ((slider.touchData.newRelativeX > 8 || slider.touchData.newRelativeX < -8) && (slider.browser.isTouch === true)) {
+                            if (e.preventDefault !== undefined) {
+                                e.preventDefault();
+                            } else {
+                                e.returnValue = false;
+                            }
+                            locals.sliding = true;
+                        }
+
+                        if ((slider.newPosY > 10 || slider.newPosY < -10) && locals.sliding === false) {
+                            $(document).off('touchmove.dev');
+                        }
+
+                        minSwipe = function() {
+                            return slider.touchData.newRelativeX / 5;
+                        };
+
+                        maxSwipe = function() {
+                            return slider.touchData.maximum + slider.touchData.newRelativeX / 5;
+                        };
+
+                        // TODO: NEED test .. what is happen !!!
+                        slider.newPosX = Math.max(Math.min(slider.touchData.newPosX, minSwipe()), maxSwipe());
+                        // slider.newPosX = Math.min(slider.touchData.newPosX, minSwipe());
+                        // if (slider.browser.support3d === true) {
+
+                        // console.log(
+                        //     ' newPosX: ' + slider.newPosX + '\n',
+                        //     'minSwipe(): ' + minSwipe() + '\n',
+                        //     'maxSwipe(): ' + maxSwipe() + '\n',
+                        //     'newRelativeX: ' + slider.touchData.newRelativeX + '\n'
+                        //     );
+
+                        methods.doTranslate(slider.newPosX);
+                        // } else {
+                        //     slider.css2move(base.newPosX);
+                        // }
+
+                        // console.log(slider.touchData.newPosX, slider.touchData.newPosY);
                     }
 
-                    function onTouchEnd() {
+                    function onTouchEnd( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            newPosition,
+                            handlers,
+                            target;
 
+                        e.target = e.target || e.srcElement;
+
+                        if (slider.touchData.newRelativeX < 0) {
+                            target = slider.getIndexCalcDir('next');
+                            slider.touchData.dragDirection = slider.direction = 'next';
+                        } else {
+                            target = slider.getIndexCalcDir('prev');
+                            // console.log(target);
+                            slider.touchData.dragDirection = slider.direction = 'prev';
+                        }
+
+                        if (slider.touchData.newRelativeX !== 0) {
+                            slider.animationStore.execute({ currentSlide: target });
+                        }
+
+                        // console.log(event);
                         swapEvents('off');
                     }
 
@@ -316,10 +470,16 @@
                         slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
                             .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
 
+                        if (slider.options.fullScreen === true) {
+                            slider.sliderWidth = window.innerWidth;
+                        } else {
+                            slider.sliderWidth = slider.width();
+                        }
+
                         $(slider.options.slideSelector, slider)
                             .css({
                                 'float': 'left',
-                                'width': slider.$wrapper.width(),
+                                'width': slider.sliderWidth,
                                 // 'height': '100%',
                                 'display': 'block'
                             });
@@ -380,11 +540,10 @@
 
                 setStartSlide: function( index ) {
                     if(slider.options.animation === 'slide') {
-                        var widthViewport = slider.width() / (slider.count + slider.cloneCount),
-                            origin = -(widthViewport * (index + (slider.cloneCount / 2))) + 'px';
+                        var origin = -(slider.sliderWidth * (index + (slider.cloneCount / 2))) + 'px';
 
                         if (slider.transitions) {
-                            var CSS3Transition = 'transition',
+                            var CSS3Transition = pfxCSS3 + 'transition',
                                 CSS3Transform = pfxCSS3 + 'transform';
 
                             slider.css(CSS3Transition, '');
@@ -573,7 +732,6 @@
 
                     if (slider.options.kenBurnType === 'bar') {
                         slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
-                        // console.log(methods.kenBurn.progress);
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
@@ -604,9 +762,7 @@
                         slider.$kenBurn.eq(1).css(CSS3Transform, 'rotate(0deg)');
                     }
 
-                },
-
-                destroy: function() {}
+                }
             },
 
             setupKeyboardNavigation: function() {
@@ -657,9 +813,13 @@
                         posibleNodeNames = 'img iframe';
 
                     if (!!target.closest('.' + namespace + 'viewport')                &&
-                        posibleNodeNames.toUpperCase().indexOf(target.nodeName) != -1 &&
-                        slider.options.preloadImages != 'visible') {
+                        posibleNodeNames.toUpperCase().indexOf(target.nodeName) != -1) {
                         count += 1;
+
+                        if (slider.options.preloadImages === 'visible') {
+                            window.removeEventListener('error', onErrorEvent, true);
+                            callback();
+                        }
                     }
                 }
             }
@@ -668,14 +828,13 @@
         /*------------------------------------*\
           - PUBLIC METHODS -
         \*------------------------------------*/
+        // TODO: refactor animate prop, on object call. like " var CSS3Transition = 'transition' "
         // Group animations in one object
         slider.animationStore = {
             slideSingleItem: function( params ) {
                 if (slider.animating === false) {
-                    var widthViewport = slider.width() / (slider.count + slider.cloneCount),
-                        currentSlide = params.currentSlide,
+                    var currentSlide = params.currentSlide,
                         origin;
-
 
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
@@ -683,11 +842,11 @@
 
                     // catch animation first and last slide
                     if (slider.direction === 'next' && params.currentSlide === 0) {
-                        origin = -(widthViewport * (slider.count + slider.cloneCount / 2)) + 'px';
+                        origin = -(slider.sliderWidth * (slider.count + slider.cloneCount / 2)) + 'px';
                     } else if (slider.direction === 'prev' && params.currentSlide === slider.count - 1) {
-                        origin = -(widthViewport * (slider.cloneCount / 2 - 1)) + 'px';
+                        origin = -(slider.sliderWidth * (slider.cloneCount / 2 - 1)) + 'px';
                     } else {
-                        origin = -(widthViewport * (currentSlide + slider.cloneCount / 2)) + 'px';
+                        origin = -(slider.sliderWidth * (currentSlide + slider.cloneCount / 2)) + 'px';
                     }
 
                     slider.prevItem = slider.currentSlide;
@@ -758,19 +917,20 @@
                         $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, slider.options.easing);
 
                         $currentItem.css('zIndex', 2)
-                            .animate({ 'opacity': 1 }, {
-                                duration: slider.options.speed,
-                                specialEasing: {
-                                    'marginLeft': slider.options.easing
-                                },
-                                complete: function() {
-                                    slider.animationStore.onEndAnimate();
-                                }
-                            });
+                                    .animate({ 'opacity': 1 }, {
+                                        duration: slider.options.speed,
+                                        specialEasing: {
+                                            'opacity': slider.options.easing
+                                        },
+                                        complete: function() {
+                                            slider.animationStore.onEndAnimate();
+                                        }
+                                    });
                     }
                 }
             },
 
+            // TODO: Make getter setter on active / deactive elements
             onStartAnimate: function() {
                 if (slider.options.smoothHeight) {
                     slider.setSmoothHeight();
@@ -860,16 +1020,15 @@
         slider.setSmoothHeight = function() {
             slider.$viewport.animate({
                 'height': slider.$slides.eq(slider.currentSlide).height()
-            }, slider.options.speed);
+            }, {
+                duration: (slider.options.smoothHeightSpeed == 0) ? slider.options.speed : slider.options.smoothHeightSpeed,
+                specialEasing: {
+                    'height': slider.options.easing
+                }
+            });
         };
 
-        // slider.destroy = function() {
-        //     if (slider.initialized) {
-
-        //     }
-        // };
-
-        slider.getIndexCalcDir = function(dir) {
+        slider.getIndexCalcDir = function( dir ) {
             slider.direction = dir;
             if (dir === 'next') {
                 return (slider.currentSlide === slider.lastItem) ? 0 : slider.currentSlide + 1;
@@ -913,13 +1072,6 @@
             getSlidesCount: function() {
                 return slider.count;
             },
-
-            // destroy: function() {
-            //     slider.destroy();
-
-            //     // API: On play click - Callback
-            //     slider.options.devOnDestroy();
-            // },
 
             goToNextSlide: function( index ) {
                 if (index !== slider.currentSlide) {
@@ -990,28 +1142,27 @@
         // Usability features
         shuffle: false,                   // Bool: ..
         startAt: 0,                       // Integer [0...]:
-        autoHeightSpeed: 1200,            // Int: ..
-        autoHeight: false,                // Bool: ..
+        smoothHeight: false,              // Bool: ..
+        smoothHeightSpeed: 0,             // [Bool, Int]: ..
         startHeight: 0,                   // [jQuery Obj, Int, String]: ..
 
 
         // Callbacks API
-        devBeforeSlide: function( data )    {}, // API: Callback on ..
-        devAfterSlide:  function( data )    {}, // API: Callback on ..
-        devBeforeInit:  function( element ) {}, // API: Callback on ..
-        devAfterInit:   function( element ) {}, // API: Callback on ..
-        // devOnDestroy:   function( data )    {}, // API: Callback on ..
-        devOnPause:     function( data )    {}, // API: Callback on ..
-        devOnPlay:      function( data )    {}  // API: Callback on ..
+        devBeforeInit:  function( element ) {},  // API: Callback on ..
+        devAfterInit:   function( element ) {},  // API: Callback on ..
+        devBeforeSlide: function( data )    {},  // API: Callback on ..
+        devAfterSlide:  function( data )    {},  // API: Callback on ..
+        devOnPause:     function( data )    {},  // API: Callback on ..
+        devOnPlay:      function( data )    {}   // API: Callback on ..
     };
 
 })(jQuery, window, document, undefined);
 
 
 var slider = $('.my-slider').deviora({
-    auto: true,
+    auto: false,
     kenBurn: true,
-    animation: 'fade',
+    animation: 'slide',
     kenBurnType: 'bar',
     shuffle: false,
     autoDelay: 3500,
@@ -1023,6 +1174,7 @@ var slider = $('.my-slider').deviora({
     fullScreenOffsetY: $('.my-header'),
 
     smoothHeight: true,
+    smoothHeightSpeed: 400,
     startHeight: 400,
 
     startAt: 0,

@@ -4,17 +4,15 @@ body {
 }
 
 .dev-wrapper {
-  // width: 700px;
+  // width: 1900px;
   margin: 0 auto;
   width: 100%;
   position: relative;
 }
-
 .dev-viewport {
   width: 100%;
   height: 100%;
   position: relative;
-
   > ul {
     padding: 0;
     margin: 0;
@@ -31,32 +29,27 @@ body {
   }
 }
 .my-slider {
-
   img {
     max-width: 100%;
   }
 
   li {
     display: none;
-
     &:first-child {
       display: block;
     }
-
   }
-
 }
-
 .slides,
 .slides > li,
 .devslider-control-nav,
 .devslider-direction-nav {
-
   margin: 0;
   padding: 0;
   list-style: none;
-
 }
+
+
 
 // *********************
 // Direction Nav
@@ -131,14 +124,16 @@ body {
   // Disabled
   .devslider-disabled {
     opacity: 0 !important;
-    filter: alpha(opacity=0);
     cursor: default;
   }
 }
 
-// *********************
-// Pagination Nav
-// *********************
+
+
+
+/*------------------------------------*\
+    # Pagination Nav
+\*------------------------------------*/
 
 .dev-direction-nav {
 
@@ -152,9 +147,11 @@ body {
   }
 }
 
-// *********************
-// Ken Burn
-// *********************
+
+
+/*------------------------------------*\
+    # Ken Burn
+\*------------------------------------*/
 
 .dev-ken-burn-wrapper {
   width: 100%;
@@ -169,7 +166,6 @@ body {
   height: 100%;
   background: red;
 }
-
 .dev-preloader {
   position: absolute;
   top: 50%;
@@ -183,7 +179,11 @@ body {
   z-index: 100;
 }
 
-/* Timers */
+
+
+// *********************
+// Timers
+// *********************
 
 .dev-bar-timer {
   position: absolute;
@@ -192,11 +192,9 @@ body {
   background: white;
   border-bottom: 2px solid #555;
   opacity: .55;
-  filter: alpha(opacity=55);
   z-index: 4;
   top: 0;
 }
-
 .dev-circle-timer {
   width: 16px;
   height: 16px;
@@ -205,67 +203,54 @@ body {
   top: 10px;
   z-index: 4;
   opacity: .65;
-  filter: alpha(opacity=65);
-  // display: none;
 }
-
 .dev-ct-half {
   background: white;
 }
-
 .dev-ct-center {
   background: #444;
 }
-
 .dev-ct-left,
 .dev-ct-right {
   width: 50%;
   height: 100%;
   overflow: hidden;
 }
-
 .dev-ct-left,
 .dev-ct-right {
   float: left;
   position: relative;
 }
-
 .dev-ct-rotate {
   width: 200%;
   height: 100%;
   position: absolute;
   top: 0;
 }
-
 .dev-ct-left .dev-ct-rotate,
 .dev-ct-right .dev-ct-hider,
 .dev-ct-right .dev-ct-half {
   left: 0;
 }
-
 .dev-ct-right .dev-ct-rotate,
 .dev-ct-left .dev-ct-hider,
 .dev-ct-left .dev-ct-half {
   right: 0;
 }
-
 .dev-ct-hider,
 .dev-ct-half {
   position: absolute;
   top: 0;
 }
-
 .dev-ct-hider {
   width: 50%;
   height: 100%;
   overflow: hidden;
 }
-
 .dev-ct-half {
   width: 200%;
   height: 100%;
 }
-
 .dev-ct-center {
   width: 50%;
   height: 50%;
@@ -273,13 +258,11 @@ body {
   top: 25%;
   position: absolute;
 }
-
 .dev-ct-half,
 .dev-ct-center {
   border-radius: 100px;
-  -moz-border-radius: 100px;
-  -webkit-border-radius: 100px;
 }
+
 
 
 /*------------------------------------*\
@@ -298,8 +281,8 @@ body {
 }
 .pubApi {
   position: fixed;
-  top: 100px;
-  left: 10px;
+  bottom: 100px;
+  right: 10px;
   width: auto;
 }
 .my-header {
