@@ -44,25 +44,23 @@
                     slider.cloneCount = 2;  // Add clone childs
                 }
 
-                if(!!slider.options.preloadImages) {
-                    slider.$preloader = $('<div class="' + namespace + 'preloader"></div>');
-                }
-
                 // Bool setting ..
                 slider.initialized = false;
                 slider.autoTimeout = null;
                 slider.animating = false;
-
                 slider.isPaused = false;
                 slider.isStopped = false;
                 slider.isPlaying = false;
 
 
-                methods.checkBrowser();
-
-
                 // API: Before init - Callback
                 slider.options.devBeforeInit();
+
+                methods.checkBrowser();
+
+                if(!!slider.options.preloadImages) {
+                    slider.$preloader = $('<div class="' + namespace + 'preloader"></div>');
+                }
 
                 // Shuffle:
                 if (slider.options.shuffle) {
@@ -255,7 +253,7 @@
             },
 
             doCss2move : function( posX ) {
-                slider.css('marginLeft', posX);
+                slider.css('left', posX);
             },
 
             setupResponsive: function() {
@@ -423,7 +421,6 @@
                             return slider.gesturesData.maximum + slider.gesturesData.newRelativeX / 5;
                         };
 
-                        // base.newPosX = Math.max(Math.min(base.newPosX, minSwipe()), maxSwipe());
                         slider.gesturesData.newPosX = Math.max(Math.min(slider.gesturesData.newPosX, minSwipe()), maxSwipe());
                             // console.log(
                             //     ' newPosX: ' + slider.gesturesData.newPosX + '\n',
@@ -434,11 +431,11 @@
                             //     );
 
                         if (slider.options.animation === 'slide') {
-                        //     if (slider.browser.transition === true) {
+                            if (slider.browser.transitions === true) {
                                 methods.doTranslate(slider.gesturesData.newPosX);
-                        //     } else {
-                        //         methods.doCss2move(slider.gesturesData.newPosX);
-                        //     }
+                            } else {
+                                methods.doCss2move(slider.gesturesData.newPosX);
+                            }
                         }
                     }
 
@@ -459,6 +456,7 @@
                         }
 
                         if (slider.gesturesData.newRelativeX !== 0) {
+                            console.log(target);
                             slider.animationStore.execute({ currentSlide: target });
                         }
 
@@ -472,6 +470,8 @@
             shell: {
                 // Setup default styles
                 setup: function() {
+                    slider.addClass(namespace + 'slider');
+
                     if (slider.options.startHeight != 0) {
                         var startHeight = slider.options.startHeight.length != null ? slider.options.startHeight.height() : slider.options.startHeight;
                         if (slider.options.fullScreen === true) {
@@ -925,10 +925,10 @@
                     } else {
                         slider.animationStore.onStartAnimate();
 
-                        slider.animate({ 'marginLeft': origin }, {
+                        slider.animate({ 'left': origin }, {
                             duration: slider.options.speed,
                             specialEasing: {
-                                'marginLeft': slider.options.easing
+                                'left': slider.options.easing
                             },
                             complete: function() {
                                 slider.animationStore.onEndAnimate();
@@ -1218,13 +1218,13 @@
 
 
 var slider = $('.my-slider').deviora({
-    auto: true,
+    auto: false,
     kenBurn: true,
-    animation: 'fade',
+    animation: 'slide',
     kenBurnType: 'circle',
     shuffle: false,
     autoDelay: 3500,
-    speed: 1500,
+    speed: 500,
     pauseOnHover: true,
 
     fullScreen: true,
