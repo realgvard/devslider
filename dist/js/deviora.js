@@ -16,8 +16,6 @@
             namespace = slider.options.namespace,
             shortNamespace = namespace.replace(/[-|\s]+$/g, ''),
             eventType = "click touchend MSPointerUp keyup",
-            // msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
-            // touch = (( "ontouchstart" in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch) && slider.vars.touch,
             pfxCSS3 = null;
             methods = {},
             publickMethods = {};
@@ -39,6 +37,7 @@
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
                 slider.cloneCount = 0;
+                slider.control = {};
 
                 if (slider.options.animation === 'slide') {
                     slider.cloneCount = 2;  // Add clone childs
@@ -71,14 +70,17 @@
                 // Start build shell slider
                 methods.shell.wrapup();
 
-                // DirectionNav:
+                // Direction Nav:
                 if (slider.options.directionNav) methods.directionNav.setup();
 
-                // ControlNav:
+                // Control Nav:
                 if (slider.options.paginationNav) methods.paginationNav.setup();
 
+                // Auto Controls:
+                if (slider.options.auto && slider.options.autoControls) methods.setupAutoControls();
+
                 // Ken Burn:
-                if (slider.options.kenBurn) methods.kenBurn.setup();
+                if (slider.options.auto && slider.options.kenBurn) methods.kenBurn.setup();
 
                 var preloadElements;
                 if(!!slider.options.preloadImages) {
@@ -93,19 +95,6 @@
                 if (slider.options.keyboardNavigation) {
                     methods.setupKeyboardNavigation();
                 }
-
-                // TODO: Need check all cases with hover of different components.
-                slider.$viewport.hover(function onMouseEnter() {
-                    if (slider.options.auto && slider.options.pauseOnHover) {
-                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
-                    }
-                    slider.addClass(namespace + 'hovered');
-                }, function onMouseLeave() {
-                    if (slider.options.auto && slider.options.pauseOnHover) {
-                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
-                    }
-                    slider.removeClass(namespace + 'hovered');
-                });
 
                 // Append collection build items
                 slider.before( slider.$wrapper );
@@ -132,6 +121,24 @@
                     methods.setupResponsive();
                 }
 
+                // TODO: Need check all cases with hover of different components.
+                slider.hover(function onSliderMouseEnter(e) {
+                    if (slider.options.auto && slider.options.pauseOnHover) {
+                        if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
+                    }
+                }, function onSliderMouseLeave() {
+                    if (slider.options.auto && slider.options.pauseOnHover) {
+                        if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
+                    }
+                });
+
+                // TODO: Need check all cases with hover of different components.
+                slider.$wrapper.hover(function onWrapperMouseEnter(e) {
+                    methods.shell.onMouseEnter();
+                }, function onWrapperMouseLeave() {
+                    methods.shell.onMouseLeave();
+                });
+
                 // define load images
                 if(!!slider.options.preloadImages) {
                     methods.loadElements(preloadElements, methods.start);
@@ -144,6 +151,7 @@
                 // Remove preloader
                 if(!!slider.options.preloadImages) {
                     slider.$preloader.remove();
+                    delete slider.$preloader;
                 }
 
                 // After build slider
@@ -160,316 +168,10 @@
                 console.log(slider);
             },
 
-            checkBrowser: function() {
-                var isTouch = 'ontouchstart' in window || window.navigator.msMaxTouchPoints;
-
-                // Touch / UseCSS:
-                var supportTransitions =
-                    (function() {
-                        var supportedProp,
-                            div = document.createElement('div'),
-                            prop = 'Transition',
-                            prefixes = ['Moz', 'Webkit', 'o', 'MS'];
-
-                        if (prop.toLowerCase() in div.style) {
-                            pfxCSS3 = '';
-                            return true;
-                        }
-
-                        for ( var i = 0; i < prefixes.length; i++ ) {
-                            if ((prefixes[i] + prop) in div.style) {
-                                slider.pfx = prefixes[i];
-                                supportedProp = prop;
-                                pfxCSS3 = '-' + slider.pfx.toLowerCase() + '-';
-
-                                break;
-                            }
-                        }
-
-                        // Avoid memory leak in IE
-                        div = null;
-
-                        if (supportedProp) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }());
-
-
-                // TODO: Collect all possible props in one object.
-                slider.browser = {
-                    isTouch: isTouch,
-                    transitions: supportTransitions
-                };
-            },
-
-            getEmptyTransition: function() {
-                var sender = {},
-                    prop = pfxCSS3 + 'transition';
-
-                sender[prop] = '';
-
-                return sender;
-            },
-
-            getTransition: function( value ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transition';
-
-                sender[prop] = value;
-
-                return sender;
-            },
-
-            getTranslate: function( posX ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transform';
-
-                sender[prop] = 'translate3d(' + posX + 'px, 0px, 0px)';
-
-                return sender;
-            },
-
-            getRotate: function( deg ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transform';
-
-                sender[prop] = 'rotate(' + deg + 'deg)';
-
-                return sender;
-            },
-
-            doEmptyTransition: function() {
-                slider.css( methods.getEmptyTransition() );
-            },
-
-            doTransition: function( value ) {
-                slider.css( methods.getTransition(value) );
-            },
-
-            doTranslate: function( posX ) {
-                slider.css(methods.getTranslate( parseFloat(posX) ));
-            },
-
-            doCss2move : function( posX ) {
-                slider.css('left', posX);
-            },
-
-            setupResponsive: function() {
-                var startWidth = slider.sliderWidth,
-                    startHeight = slider.$wrapper.height();
-
-                $(window).resize(function() {
-                    var width = this.innerWidth,
-                        different = slider.sliderWidth / startWidth,
-                        newHeight = startHeight * different;
-
-                    slider.sliderWidth = width;
-
-                    methods.shell.updateWidth( slider.sliderWidth );
-                    if (newHeight <= startHeight) {
-                        if (newHeight >= slider.options.minFullScreenHeight) {
-                            methods.shell.updateHeight( newHeight );
-                        } else {
-                            methods.shell.updateHeight( slider.options.minFullScreenHeight );
-                        }
-                    }
-
-                    methods.shell.setStartOnSlideAnimation( slider.currentSlide );
-                });
-            },
-
-            gestures: {
-                setupEvents: function() {
-                    var locals = {
-                        offsetX       : 0,
-                        offsetY       : 0,
-                        baseElWidth   : 0,
-                        relativePos   : 0,
-                        position      : null,
-                        minSwipe      : null,
-                        maxSwipe      : null,
-                        sliding       : null,
-                        dargging      : null,
-                        targetElement : null
-                    };
-
-                    // prod.
-                    // var types = [
-                    //     'touchstart.dev',
-                    //     'touchmove.dev',
-                    //     'touchend.dev'
-                    // ];
-
-                    // test
-                    var types = [
-                        'mousedown.dev',
-                        'mousemove.dev',
-                        'mouseup.dev'
-                    ];
-
-                    slider.events = {}
-                    slider.events.start = types[0];
-                    slider.events.move  = types[1];
-                    slider.events.end   = types[2];
-
-                    function getTouches( event ) {
-                        if (event.touches !== undefined) {
-                            return {
-                                x: event.touches[0].pageX,
-                                y: event.touches[0].pageY
-                            }
-                        }
-                        if (event.touches === undefined) {
-                            if (event.pageX !== undefined) {
-                                return {
-                                    x: event.pageX,
-                                    y: event.pageY
-                                };
-                            }
-                            if (event.pageX === undefined) {
-                                return {
-                                    x: event.clientX,
-                                    y: event.clientY
-                                };
-                            }
-                        }
-                    };
-
-                    // TODO: Make event types on variables, it's make possible keep cross-browser.
-                    function swapEvents( prop ) {
-                        if (prop === 'on') {
-                            $(document).on(slider.events.move, onTouchMove);
-                            $(document).on(slider.events.end, onTouchEnd);
-                        } else if (prop === 'off') {
-                            $(document).off(slider.events.move);
-                            $(document).off(slider.events.end);
-                        }
-                    }
-
-                    function onTouchStart( event ) {
-                        var e = event.originalEvent || event || window.event,
-                            position;
-
-                        if (slider.animating) {
-                            return false;
-                        }
-
-                        if (e.which === 2 || e.which === 3) {
-                            return false;
-                        }
-
-                        // block drag img element, TODO: need disable
-                        e.preventDefault();
-
-                        if (slider.options.auto !== false) {
-                            slider.pause();
-                        }
-
-                        slider.gesturesData.newPosX = 0;
-                        slider.gesturesData.newRelativeX = 0;
-
-                        slider.css( methods.getEmptyTransition() );
-
-                        position = slider.position();
-
-                        locals.relativePos = position.left;
-                        locals.offsetX = getTouches(e).x - position.left;
-                        locals.offsetY = getTouches(e).y - position.top;
-
-                        swapEvents('on');
-
-                        locals.sliding = false;
-                        locals.targetElement = e.target || e.srcElement;
-                    }
-
-                    function onTouchMove( event ) {
-                        var e = event.originalEvent || event || window.event,
-                            minSwipe,
-                            maxSwipe;
-
-                        slider.gesturesData.newPosX = getTouches(e).x - locals.offsetX;
-                        slider.gesturesData.newPosY = getTouches(e).y - locals.offsetY;
-                        slider.gesturesData.newRelativeX = slider.gesturesData.newPosX - locals.relativePos;
-
-                        if (locals.dragging !== true && slider.gesturesData.newRelativeX !== 0) {
-                            locals.dragging = true;
-
-                            // TODO: Make callback
-                        }
-
-                        // TODO: check on mobile ! (Only for mobile)
-                        if ((slider.gesturesData.newRelativeX > 8 || slider.gesturesData.newRelativeX < -8) && (slider.browser.isTouch === true)) {
-                            if (e.preventDefault !== undefined) {
-                                e.preventDefault();
-                            } else {
-                                e.returnValue = false;
-                            }
-                            locals.sliding = true;
-                        }
-
-                        if ((slider.newPosY > 10 || slider.newPosY < -10) && locals.sliding === false) {
-                            $(document).off('touchmove.dev');
-                        }
-
-                        minSwipe = function() {
-                            return slider.gesturesData.newRelativeX / 5;
-                        };
-
-                        maxSwipe = function() {
-                            return slider.gesturesData.maximum + slider.gesturesData.newRelativeX / 5;
-                        };
-
-                        slider.gesturesData.newPosX = Math.max(Math.min(slider.gesturesData.newPosX, minSwipe()), maxSwipe());
-                            // console.log(
-                            //     ' newPosX: ' + slider.gesturesData.newPosX + '\n',
-                            //     'minSwipe(): ' + minSwipe() + '\n',
-                            //     'maxSwipe(): ' + maxSwipe() + '\n',
-                            //     'newRelativeX: ' + slider.gesturesData.newRelativeX + '\n',
-                            //     slider.gesturesData.maximum
-                            //     );
-
-                        if (slider.options.animation === 'slide') {
-                            if (slider.browser.transitions === true) {
-                                methods.doTranslate(slider.gesturesData.newPosX);
-                            } else {
-                                methods.doCss2move(slider.gesturesData.newPosX);
-                            }
-                        }
-                    }
-
-                    function onTouchEnd( event ) {
-                        var e = event.originalEvent || event || window.event,
-                            newPosition,
-                            handlers,
-                            target;
-
-                        e.target = e.target || e.srcElement;
-
-                        if (slider.gesturesData.newRelativeX < 0) {
-                            target = slider.getIndexCalcDir('next');
-                            slider.gesturesData.dragDirection = slider.direction = 'next';
-                        } else {
-                            target = slider.getIndexCalcDir('prev');
-                            slider.gesturesData.dragDirection = slider.direction = 'prev';
-                        }
-
-                        if (slider.gesturesData.newRelativeX !== 0) {
-                            console.log(target);
-                            slider.animationStore.execute({ currentSlide: target });
-                        }
-
-                        swapEvents('off');
-                    }
-
-                    slider.$viewport.on(slider.events.start, onTouchStart);
-                }
-            },
-
             shell: {
                 // Setup default styles
                 setup: function() {
+                    // Set basic CSS class
                     slider.addClass(namespace + 'slider');
 
                     if (slider.options.startHeight != 0) {
@@ -486,7 +188,6 @@
                     }
 
                     if (slider.options.fullScreen === true) {
-                    // if (slider.options.fullScreen === true && slider.options.animation == 'fade') {
                         var $window = $(window),
                             heightWindow = $window.height(),
                             offsetY = slider.options.fullScreenOffsetY.length != null ? slider.options.fullScreenOffsetY.height() : slider.options.fullScreenOffsetY;
@@ -628,33 +329,39 @@
                     // } else {
                         // slider.$wrapper.height( slider.options.minFullScreenHeight );
                     // }
+                },
+
+                onMouseEnter: function() {
+                    slider.addClass(namespace + 'hovered');
+                    slider.control.$directionNav.stop().fadeIn(300);
+                },
+
+                onMouseLeave: function() {
+                    slider.removeClass(namespace + 'hovered');
+                    slider.control.$directionNav.stop().fadeOut(300);
                 }
             },
 
             directionNav: {
                 setup: function() {
                     var $directionNavScaffold =
-                        $('<ul class="' + namespace + 'direction-nav">' +
-                            '<li class="' + namespace + 'nav-prev">' +
-                                '<a class="' + namespace + 'prev" href="#">' +
-                                    (slider.options.navigationText[0] || '') +
-                                '</a>' +
-                            '</li>' +
-                            '<li class="' + namespace + 'nav-next">' +
-                                '<a class="' + namespace + 'next" href="#">' +
-                                    (slider.options.navigationText[1] || '') +
-                                '</a>' +
-                            '</li>' +
-                        '</ul>');
+                        $('<div class="' + namespace + 'direction-nav-block">' +
+                            '<div class="' + namespace + 'direction-item ' + namespace + 'direction-prev">' +
+                                (slider.options.navigationText[0] || '') +
+                            '</div>' +
+                            '<div class="' + namespace + 'direction-item ' + namespace + 'direction-next">' +
+                                (slider.options.navigationText[1] || '') +
+                            '</div>' +
+                        '</div>');
 
                     slider.$wrapper.append( $directionNavScaffold );
-                    slider.$directionNav = $('.' + namespace + 'direction-nav li a', slider.$wrapper);
+                    slider.control.$directionNav = $('.' + namespace + 'direction-nav-block .' + namespace + 'direction-item', slider.$wrapper).hide();
 
-                    slider.$directionNav.on(eventType, function( event ) {
+                    slider.control.$directionNav.on(eventType, function( event ) {
                         event.preventDefault();
                         var target;
 
-                        target = ( $(this).hasClass(namespace + 'prev') ) ? slider.getIndexCalcDir('prev') : slider.getIndexCalcDir('next');
+                        target = ( $(this).hasClass(namespace + 'direction-prev') ) ? slider.getIndexCalcDir('prev') : slider.getIndexCalcDir('next');
 
                         slider.animationStore.execute({ currentSlide: target });
                     });
@@ -663,7 +370,7 @@
 
             paginationNav: {
                 setup: function() {
-                    var $controlPagScaffold = $('<ol class="' + namespace + 'pagination-nav"></ol>');
+                    var $controlPagScaffold = $('<ol class="' + namespace + 'pagination-nav-block"></ol>');
 
                     if (slider.count > 1) {
                         for (var i = 0, len = slider.count; i < len; i++) {
@@ -681,9 +388,9 @@
                     }
 
                     // Append all items
-                    slider.$paginationNav = $controlPagScaffold;
+                    slider.control.$paginationNav = $controlPagScaffold;
 
-                    slider.$paginationNav.on(eventType, 'a', function( event ) {
+                    slider.control.$paginationNav.on(eventType, 'a', function( event ) {
                         event.preventDefault();
                         var $this = $(this),
                             target = $this.data(namespace + 'bullet');
@@ -694,7 +401,7 @@
                         }
                     });
 
-                    slider.$wrapper.append( slider.$paginationNav );
+                    slider.$wrapper.append( slider.control.$paginationNav );
                 },
 
                 update: function() {
@@ -705,10 +412,34 @@
 
                 setActive: function() {
                     if (slider.prevItem != slider.currentSlide) {
-                        slider.$paginationNav.children().eq(slider.prevItem).removeClass(namespace + 'active');
+                        slider.control.$paginationNav.children().eq(slider.prevItem).removeClass(namespace + 'active');
                     }
-                    slider.$paginationNav.children().eq(slider.currentSlide).addClass(namespace + 'active');
+                    slider.control.$paginationNav.children().eq(slider.currentSlide).addClass(namespace + 'active');
                 }
+            },
+
+            setupAutoControls: function() {
+                slider.control.$start =
+                    $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-start"></div>');
+                slider.control.$stop =
+                    $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-stop"></div>');
+
+                var $directionNavScaffold =
+                    $('<div class="' + namespace + 'auto-control-block"></div>');
+
+                $directionNavScaffold.append([slider.control.$start, slider.control.$stop])
+
+                slider.control.$start.on('click', function() {
+                    slider.play();
+                });
+
+                slider.control.$stop.on('click', function() {
+                    publickMethods.pause();
+                });
+
+                methods.switchStateStartAndPause();
+
+                slider.$wrapper.append( $directionNavScaffold );
             },
 
             autoPlay: {
@@ -754,7 +485,7 @@
                         $kenBurnContainer = $('<div class="' + namespace + 'ken-burn-wrapper">' +
                                                 '<div class="' + namespace + 'ken-burn-progress"></div>' +
                                             '</div>');
-                        slider.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ken-burn-progress');
+                        slider.control.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ken-burn-progress');
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
@@ -776,7 +507,8 @@
                                                 '<div class="' + namespace + 'ct-center"></div> ' +
                                             '</div>');
 
-                        slider.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ct-rotate');
+                        slider.control.$kenBurnContainer = $kenBurnContainer;
+                        slider.control.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ct-rotate');
                     }
 
                     methods.kenBurn.reset();
@@ -790,17 +522,17 @@
                     methods.kenBurn.progress = percent.toFixed(2) * 1;
 
                     if (slider.options.kenBurnType === 'bar') {
-                        slider.$kenBurn.css('width', methods.kenBurn.progress + '%');
+                        slider.control.$kenBurn.css('width', methods.kenBurn.progress + '%');
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
                         var valueInDeg = 360 * methods.kenBurn.progress / 100,
-                            halfValue = 360 / 2;
+                            halfValueInDeg = 360 / 2;
 
-                        if (valueInDeg >= halfValue) {
-                            slider.$kenBurn.eq(0).css(methods.getRotate( -(halfValue - valueInDeg) ));
+                        if (valueInDeg >= halfValueInDeg) {
+                            slider.control.$kenBurn.eq(0).css(methods.getRotate( -(halfValueInDeg - valueInDeg) ));
                         } else {
-                            slider.$kenBurn.eq(1).css(methods.getRotate( valueInDeg ));
+                            slider.control.$kenBurn.eq(1).css(methods.getRotate( valueInDeg ));
                         }
                     }
                 },
@@ -811,14 +543,318 @@
                     }
 
                     if (slider.options.kenBurnType === 'bar') {
-                        slider.$kenBurn.width(0);
+                        slider.control.$kenBurn.width(0);
                     }
 
                     if (slider.options.kenBurnType === 'circle') {
-                        slider.$kenBurn.eq(0).css(methods.getRotate(0));
-                        slider.$kenBurn.eq(1).css(methods.getRotate(0));
+                        slider.control.$kenBurn.eq(0).css(methods.getRotate(0));
+                        slider.control.$kenBurn.eq(1).css(methods.getRotate(0));
+                    }
+                }
+            },
+
+            checkBrowser: function() {
+                var isTouch = 'ontouchstart' in window || window.navigator.msMaxTouchPoints;
+
+                // Touch / UseCSS:
+                var supportTransitions =
+                    (function() {
+                        var supportedProp,
+                            div = document.createElement('div'),
+                            prop = 'Transition',
+                            prefixes = ['Moz', 'Webkit', 'o', 'MS'];
+
+                        if (prop.toLowerCase() in div.style) {
+                            pfxCSS3 = '';
+                            return true;
+                        }
+
+                        for ( var i = 0; i < prefixes.length; i++ ) {
+                            if ((prefixes[i] + prop) in div.style) {
+                                slider.pfx = prefixes[i];
+                                supportedProp = prop;
+                                pfxCSS3 = '-' + slider.pfx.toLowerCase() + '-';
+
+                                break;
+                            }
+                        }
+
+                        // Avoid memory leak in IE
+                        div = null;
+
+                        if (supportedProp) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }());
+
+                slider.browser = {
+                    isTouch: isTouch,
+                    transitions: supportTransitions
+                };
+            },
+
+            getEmptyTransition: function() {
+                var sender = {},
+                    prop = pfxCSS3 + 'transition';
+
+                sender[prop] = '';
+
+                return sender;
+            },
+
+            getTransition: function( value ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transition';
+
+                sender[prop] = value;
+
+                return sender;
+            },
+
+            getTranslate: function( posX ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'translate3d(' + posX + 'px, 0px, 0px)';
+
+                return sender;
+            },
+
+            getRotate: function( deg ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'rotate(' + deg + 'deg)';
+
+                return sender;
+            },
+
+            doEmptyTransition: function() {
+                slider.css( methods.getEmptyTransition() );
+            },
+
+            doTransition: function( value ) {
+                slider.css( methods.getTransition(value) );
+            },
+
+            doTranslate: function( posX ) {
+                slider.css(methods.getTranslate( parseFloat(posX) ));
+            },
+
+            doCss2move : function( posX ) {
+                slider.css('left', posX);
+            },
+
+            // TODO: Improve this method.
+            setupResponsive: function() {
+                var startWidth = slider.sliderWidth,
+                    startHeight = slider.$wrapper.height();
+
+                $(window).resize(function() {
+                    var width = $(this).width(),
+                        // height = $(this).height(),
+                        different = slider.sliderWidth / startWidth,
+                        newHeight = startHeight * different;
+
+                    slider.sliderWidth = width;
+
+                    methods.shell.updateWidth( slider.sliderWidth );
+                    if (newHeight <= startHeight) {
+                        if (newHeight >= slider.options.minFullScreenHeight) {
+                            methods.shell.updateHeight( newHeight );
+                        } else {
+                            methods.shell.updateHeight( slider.options.minFullScreenHeight );
+                        }
                     }
 
+                    methods.shell.setStartOnSlideAnimation( slider.currentSlide );
+                });
+            },
+
+            gestures: {
+                setupEvents: function() {
+                    var locals = {
+                        offsetX       : 0,
+                        offsetY       : 0,
+                        baseElWidth   : 0,
+                        relativePos   : 0,
+                        position      : null,
+                        minSwipe      : null,
+                        maxSwipe      : null,
+                        sliding       : null,
+                        dargging      : null,
+                        targetElement : null
+                    };
+
+                    // prod
+                    var types = [
+                        'touchstart.dev',
+                        'touchmove.dev',
+                        'touchend.dev'
+                    ];
+
+                    // test
+                    // var types = [
+                    //     'mousedown.dev',
+                    //     'mousemove.dev',
+                    //     'mouseup.dev'
+                    // ];
+
+                    slider.events = {}
+                    slider.events.start = types[0];
+                    slider.events.move  = types[1];
+                    slider.events.end   = types[2];
+
+                    function getTouches( event ) {
+                        if (event.touches !== undefined) {
+                            return {
+                                x: event.touches[0].pageX,
+                                y: event.touches[0].pageY
+                            }
+                        }
+                        if (event.touches === undefined) {
+                            if (event.pageX !== undefined) {
+                                return {
+                                    x: event.pageX,
+                                    y: event.pageY
+                                };
+                            }
+                            if (event.pageX === undefined) {
+                                return {
+                                    x: event.clientX,
+                                    y: event.clientY
+                                };
+                            }
+                        }
+                    };
+
+                    function swapEvents( prop ) {
+                        if (prop === 'on') {
+                            $(document).on(slider.events.move, onTouchMove);
+                            $(document).on(slider.events.end, onTouchEnd);
+                        } else if (prop === 'off') {
+                            $(document).off(slider.events.move);
+                            $(document).off(slider.events.end);
+                        }
+                    }
+
+                    function onTouchStart( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            position;
+
+                        if (slider.animating) {
+                            return false;
+                        }
+
+                        if (e.which === 2 || e.which === 3) {
+                            return false;
+                        }
+
+                        // block drag img element, TODO: need disable or not ?
+                        // e.preventDefault();ч
+
+                        if (slider.options.auto !== false) {
+                            slider.pause();
+                        }
+
+                        slider.gesturesData.newPosX = 0;
+                        slider.gesturesData.newRelativeX = 0;
+
+                        slider.css( methods.getEmptyTransition() );
+
+                        position = slider.position();
+
+                        locals.relativePos = position.left;
+                        locals.offsetX = getTouches(e).x - position.left;
+                        locals.offsetY = getTouches(e).y - position.top;
+
+                        swapEvents('on');
+
+                        locals.sliding = false;
+                        locals.targetElement = e.target || e.srcElement;
+                    }
+
+                    function onTouchMove( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            minSwipe,
+                            maxSwipe;
+
+                        slider.gesturesData.newPosX = getTouches(e).x - locals.offsetX;
+                        slider.gesturesData.newPosY = getTouches(e).y - locals.offsetY;
+                        slider.gesturesData.newRelativeX = slider.gesturesData.newPosX - locals.relativePos;
+
+                        if (locals.dragging !== true && slider.gesturesData.newRelativeX !== 0) {
+                            locals.dragging = true;
+                            // TODO: Make callback.
+                        }
+
+                        // TODO: check on mobile ! (Only for mobile)
+                        if ((slider.gesturesData.newRelativeX > 8 || slider.gesturesData.newRelativeX < -8) && (slider.browser.isTouch === true)) {
+                            if (e.preventDefault !== undefined) {
+                                e.preventDefault();
+                            } else {
+                                e.returnValue = false;
+                            }
+                            locals.sliding = true;
+                        }
+
+                        if ((slider.newPosY > 10 || slider.newPosY < -10) && locals.sliding === false) {
+                            $(document).off(slider.events.move);
+                        }
+
+                        minSwipe = function() {
+                            return slider.gesturesData.newRelativeX / 5;
+                        };
+
+                        maxSwipe = function() {
+                            return slider.gesturesData.maximum + slider.gesturesData.newRelativeX / 5;
+                        };
+
+                        slider.gesturesData.newPosX = Math.max(Math.min(slider.gesturesData.newPosX, minSwipe()), maxSwipe());
+                            // console.log(
+                            //     ' newPosX: ' + slider.gesturesData.newPosX + '\n',
+                            //     'minSwipe(): ' + minSwipe() + '\n',
+                            //     'maxSwipe(): ' + maxSwipe() + '\n',
+                            //     'newRelativeX: ' + slider.gesturesData.newRelativeX + '\n',
+                            //     slider.gesturesData.maximum
+                            //     );
+
+                        if (slider.options.animation === 'slide') {
+                            if (slider.browser.transitions === true) {
+                                methods.doTranslate(slider.gesturesData.newPosX);
+                            } else {
+                                methods.doCss2move(slider.gesturesData.newPosX);
+                            }
+                        }
+                    }
+
+                    function onTouchEnd( event ) {
+                        var e = event.originalEvent || event || window.event,
+                            newPosition,
+                            handlers,
+                            target;
+
+                        e.target = e.target || e.srcElement;
+
+                        if (slider.gesturesData.newRelativeX < 0) {
+                            target = slider.getIndexCalcDir('next');
+                            slider.gesturesData.dragDirection = slider.direction = 'next';
+                        } else {
+                            target = slider.getIndexCalcDir('prev');
+                            slider.gesturesData.dragDirection = slider.direction = 'prev';
+                        }
+
+                        if (slider.gesturesData.newRelativeX !== 0) {
+                            console.log(target);
+                            slider.animationStore.execute({ currentSlide: target });
+                        }
+
+                        swapEvents('off');
+                    }
+
+                    slider.$viewport.on(slider.events.start, onTouchStart);
                 }
             },
 
@@ -826,31 +862,31 @@
                 $(document).keydown(function(e) {
                     if (!slider.animating && slider.initialized) {
 
-                        // Left -> prev()
-                        if (e.keyCode == 37) {
+                        // Left -> prevSlide()
+                        if (e.keyCode === 37) {
                             publickMethods.prevSlide();
                         }
 
-                        // Right -> next()
-                        if (e.keyCode == 39) {
+                        // Right -> nextSlide()
+                        if (e.keyCode === 39) {
                             publickMethods.nextSlide();
                         }
                     }
                 });
             },
 
-            loadElements: function(elements, callback){
+            loadElements: function( elements, callback ) {
                 var total = slider.find(elements).length,
                     count = 0;
 
-                if (total === 0){
+                if (total === 0) {
                     callback();
                     return;
                 }
 
                 window.addEventListener('error', onErrorEvent, true);
 
-                elements.find('img, ifram').each(function() {
+                elements.find('img, iframe').each(function() {
                     $(this).one('load', function() {
                         count += 1;
 
@@ -870,7 +906,7 @@
                         posibleNodeNames = 'img iframe';
 
                     if (!!target.closest('.' + namespace + 'viewport')                &&
-                        posibleNodeNames.toUpperCase().indexOf(target.nodeName) != -1) {
+                        posibleNodeNames.toUpperCase().indexOf(target.nodeName) !== -1) {
                         count += 1;
 
                         if (slider.options.preloadImages === 'visible') {
@@ -879,13 +915,22 @@
                         }
                     }
                 }
+            },
+
+            switchStateStartAndPause: function() {
+                if (slider.isPaused) {
+                    slider.control.$start.removeClass(namespace + 'auto-control-start-active');
+                    slider.control.$stop.addClass(namespace + 'auto-control-stop-active');
+                } else {
+                    slider.control.$start.addClass(namespace + 'auto-control-start-active');
+                    slider.control.$stop.removeClass(namespace + 'auto-control-stop-active');
+                }
             }
         };
 
         /*------------------------------------*\
           - PUBLIC METHODS -
         \*------------------------------------*/
-        // TODO: refactor animate prop, on object call. like " var CSS3Transition = 'transition' "
         // Group animations in one object
         slider.animationStore = {
             slideSingleItem: function( params ) {
@@ -897,7 +942,7 @@
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
 
-                    // catch animation first and last slide
+                    // Catch animation first and last slide then move slide througt first and last position.
                     if (slider.direction === 'next' && params.currentSlide === 0) {
                         origin = -(slider.sliderWidth * (slider.count + slider.cloneCount / 2)) + 'px';
                     } else if (slider.direction === 'prev' && params.currentSlide === slider.count - 1) {
@@ -984,10 +1029,13 @@
                 }
             },
 
-            // TODO: Make getter setter on active / deactive elements
             onStartAnimate: function() {
                 if (slider.options.smoothHeight) {
                     slider.setSmoothHeight();
+                }
+
+                if (slider.options.auto && slider.options.kenBurn) {
+                    slider.control.$kenBurnContainer.stop().fadeOut(150);
                 }
             },
 
@@ -1009,6 +1057,10 @@
                 } else {
                     slider.$slides.eq(slider.prevItem).css( methods.getEmptyTransition() );
                     slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTransition() );
+                }
+
+                if (slider.options.auto && slider.options.kenBurn) {
+                    slider.control.$kenBurnContainer.stop().fadeIn(250);
                 }
 
                 // API: After slide - Callback
@@ -1061,6 +1113,8 @@
                 cancelAnimationFrame(slider.autoTimeout);
             }
 
+            methods.switchStateStartAndPause();
+
             // console.log('dev: slider.isPaused()');
         };
 
@@ -1071,6 +1125,8 @@
                 methods.autoPlay.setLastDate();
             }
 
+            methods.switchStateStartAndPause();
+
             // console.log('dev: slider.play()');
         };
 
@@ -1078,7 +1134,7 @@
             slider.$viewport.animate({
                 'height': slider.$slides.eq(slider.currentSlide).height()
             }, {
-                duration: (slider.options.smoothHeightSpeed == 0) ? slider.options.speed : slider.options.smoothHeightSpeed,
+                duration: (slider.options.smoothHeightSpeed === 0) ? slider.options.speed : slider.options.smoothHeightSpeed,
                 specialEasing: {
                     'height': slider.options.easing
                 }
@@ -1161,7 +1217,7 @@
         // Most important dev features
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
-        animation: 'slide',               // String [slide, fade]:
+        animation: 'slide',               // String [slide, fade]: ..
         easing: 'swing',                  // String:
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
@@ -1179,6 +1235,7 @@
 
         // Auto play
         auto: true,                       // Bool: ..
+        autoControls: true,               // Bool: ..
         autoDelay: 5000,                  // Integer [0...]: ..
         pauseOnHover: false,              // Bool: ..
 
@@ -1218,13 +1275,13 @@
 
 
 var slider = $('.my-slider').deviora({
-    auto: false,
+    auto: true,
     kenBurn: true,
     animation: 'slide',
     kenBurnType: 'circle',
     shuffle: false,
     autoDelay: 3500,
-    speed: 500,
+    speed: 1000,
     pauseOnHover: true,
 
     fullScreen: true,
@@ -1240,7 +1297,7 @@ var slider = $('.my-slider').deviora({
     directionNav: true,
     paginationNav: true,
     preloadImages: 'visible',
-    navigationText: ['prev', 'next'],
+    navigationText: ['Prev', 'Next'],
 
     devBeforeSlide: function () {
         //console.log('dev: devBeforeSlide() - Callback');
@@ -1289,8 +1346,8 @@ $('#prevTo').click(function () {
 
 $('#pause').click(function () {
     slider.pause();
-    console.log(slider.getCurrentIndex());
-    console.log(slider.getSlidesCount());
+    // console.log(slider.getCurrentIndex());
+    // console.log(slider.getSlidesCount());
     return false;
 });
 
