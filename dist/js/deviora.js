@@ -1,7 +1,18 @@
 /**
- * Deviora slider
+ * Deviora slider - simple full size slider.
+ *
+ * @author: https://github.com/realgvard
  */
 
+(function() {
+    var requestAnimationFrame =
+        window.requestAnimationFrame       ||
+        window.mozRequestAnimationFrame    ||
+        window.webkitRequestAnimationFrame ||
+        window.msRequestAnimationFrame;
+
+    window.requestAnimationFrame = requestAnimationFrame;
+})();
 
 ;(function ( $, window, document, undefined ) {
     $.deviora = function( element, options ) {
@@ -77,7 +88,7 @@
                 if (slider.options.paginationNav) methods.paginationNav.setup();
 
                 // Auto Controls:
-                if (slider.options.auto && slider.options.autoControls) methods.setupAutoControls();
+                if (slider.options.auto && slider.options.autoControls) methods.autoControls();
 
                 // Ken Burn:
                 if (slider.options.auto && slider.options.kenBurn) methods.kenBurn.setup();
@@ -122,22 +133,26 @@
                 }
 
                 // TODO: Need check all cases with hover of different components.
-                slider.hover(function onSliderMouseEnter(e) {
+                slider.$wrapper.hover(function onSliderMouseEnter( e ) {
                     if (slider.options.auto && slider.options.pauseOnHover) {
                         if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
                     }
+
+                    methods.shell.onMouseEnter();
                 }, function onSliderMouseLeave() {
                     if (slider.options.auto && slider.options.pauseOnHover) {
                         if (!slider.animating && slider.isPaused && !slider.isStopped) slider.play();
                     }
+
+                    methods.shell.onMouseLeave();
                 });
 
                 // TODO: Need check all cases with hover of different components.
-                slider.$wrapper.hover(function onWrapperMouseEnter(e) {
-                    methods.shell.onMouseEnter();
-                }, function onWrapperMouseLeave() {
-                    methods.shell.onMouseLeave();
-                });
+                // slider.$wrapper.hover(function onWrapperMouseEnter(e) {
+                //     methods.shell.onMouseEnter();
+                // }, function onWrapperMouseLeave() {
+                //     methods.shell.onMouseLeave();
+                // });
 
                 // define load images
                 if(!!slider.options.preloadImages) {
@@ -322,7 +337,7 @@
                         });
                 },
 
-                // TODO: Improvement updateHeight() on resize, and init
+                // TODO: Improvement updateHeight() on resize, and init.
                 updateHeight: function( value ) {
                     // if (value >= slider.options.minFullScreenHeight) {
                         slider.$wrapper.height( value );
@@ -333,12 +348,12 @@
 
                 onMouseEnter: function() {
                     slider.addClass(namespace + 'hovered');
-                    slider.control.$directionNav.stop().fadeIn(300);
+                    slider.control.$directionNav.stop(true).fadeIn(300);
                 },
 
                 onMouseLeave: function() {
                     slider.removeClass(namespace + 'hovered');
-                    slider.control.$directionNav.stop().fadeOut(300);
+                    slider.control.$directionNav.stop(true).fadeOut(300);
                 }
             },
 
@@ -363,6 +378,7 @@
 
                         target = ( $(this).hasClass(namespace + 'direction-prev') ) ? slider.getIndexCalcDir('prev') : slider.getIndexCalcDir('next');
 
+                        slider.animationStore.forceUpdate = true;
                         slider.animationStore.execute({ currentSlide: target });
                     });
                 }
@@ -370,18 +386,12 @@
 
             paginationNav: {
                 setup: function() {
-                    var $controlPagScaffold = $('<ol class="' + namespace + 'pagination-nav-block"></ol>');
+                    var $controlPagScaffold = $('<div class="' + namespace + 'pagination-nav-block"></div>');
 
                     if (slider.count > 1) {
                         for (var i = 0, len = slider.count; i < len; i++) {
-                            var $pagItem = $('<li>', {
-                                'class': namespace + 'bullet',
-                                'html': function() {
-                                    var $pagButton = $('<a href="#">' + i + '</a>');
-                                    $pagButton.data(namespace + 'bullet', i);
-                                    return $pagButton;
-                                }
-                            });
+                            var $pagItem =
+                                $('<div class="' + namespace + 'bullet"></div>').data(namespace + 'bullet', i);
 
                             $controlPagScaffold.append( $pagItem );
                         }
@@ -390,13 +400,14 @@
                     // Append all items
                     slider.control.$paginationNav = $controlPagScaffold;
 
-                    slider.control.$paginationNav.on(eventType, 'a', function( event ) {
+                    slider.control.$paginationNav.on(eventType, '.' + namespace + 'bullet', function( event ) {
                         event.preventDefault();
                         var $this = $(this),
                             target = $this.data(namespace + 'bullet');
 
-                        if(target != slider.currentSlide) {
+                        if(target !== slider.currentSlide) {
                             slider.direction = null;
+                            slider.animationStore.forceUpdate = true;
                             slider.animationStore.execute({ currentSlide: target });
                         }
                     });
@@ -412,22 +423,24 @@
 
                 setActive: function() {
                     if (slider.prevItem != slider.currentSlide) {
-                        slider.control.$paginationNav.children().eq(slider.prevItem).removeClass(namespace + 'active');
+                        slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.prevItem).removeClass(namespace + 'active');
                     }
-                    slider.control.$paginationNav.children().eq(slider.currentSlide).addClass(namespace + 'active');
+                    slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.currentSlide).addClass(namespace + 'active');
                 }
             },
 
-            setupAutoControls: function() {
+            autoControls: function() {
                 slider.control.$start =
                     $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-start"></div>');
                 slider.control.$stop =
                     $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-stop"></div>');
 
-                var $directionNavScaffold =
-                    $('<div class="' + namespace + 'auto-control-block"></div>');
+                if (!slider.options.paginationNav) {
+                    var $directionNavScaffold =
+                        $('<div class="' + namespace + 'auto-control-block"></div>');
+                    $directionNavScaffold.append([slider.control.$start, slider.control.$stop])
+                }
 
-                $directionNavScaffold.append([slider.control.$start, slider.control.$stop])
 
                 slider.control.$start.on('click', function() {
                     slider.play();
@@ -439,7 +452,12 @@
 
                 methods.switchStateStartAndPause();
 
-                slider.$wrapper.append( $directionNavScaffold );
+                if (!slider.options.paginationNav) {
+                    slider.$wrapper.append( $directionNavScaffold );
+                } else {
+                    slider.control.$paginationNav.prepend(slider.control.$start);
+                    slider.control.$paginationNav.append(slider.control.$stop);
+                }
             },
 
             autoPlay: {
@@ -507,9 +525,10 @@
                                                 '<div class="' + namespace + 'ct-center"></div> ' +
                                             '</div>');
 
-                        slider.control.$kenBurnContainer = $kenBurnContainer;
                         slider.control.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ct-rotate');
                     }
+
+                    slider.control.$kenBurnContainer = $kenBurnContainer;
 
                     methods.kenBurn.reset();
                     slider.$viewport.prepend( $kenBurnContainer );
@@ -645,32 +664,6 @@
 
             doCss2move : function( posX ) {
                 slider.css('left', posX);
-            },
-
-            // TODO: Improve this method.
-            setupResponsive: function() {
-                var startWidth = slider.sliderWidth,
-                    startHeight = slider.$wrapper.height();
-
-                $(window).resize(function() {
-                    var width = $(this).width(),
-                        // height = $(this).height(),
-                        different = slider.sliderWidth / startWidth,
-                        newHeight = startHeight * different;
-
-                    slider.sliderWidth = width;
-
-                    methods.shell.updateWidth( slider.sliderWidth );
-                    if (newHeight <= startHeight) {
-                        if (newHeight >= slider.options.minFullScreenHeight) {
-                            methods.shell.updateHeight( newHeight );
-                        } else {
-                            methods.shell.updateHeight( slider.options.minFullScreenHeight );
-                        }
-                    }
-
-                    methods.shell.setStartOnSlideAnimation( slider.currentSlide );
-                });
             },
 
             gestures: {
@@ -858,6 +851,32 @@
                 }
             },
 
+            // TODO: Improve this method.
+            setupResponsive: function() {
+                var startWidth = slider.sliderWidth,
+                    startHeight = slider.$wrapper.height();
+
+                $(window).resize(function() {
+                    var width = $(this).width(),
+                        // height = $(this).height(),
+                        different = slider.sliderWidth / startWidth,
+                        newHeight = startHeight * different;
+
+                    slider.sliderWidth = width;
+
+                    methods.shell.updateWidth( slider.sliderWidth );
+                    if (newHeight <= startHeight) {
+                        if (newHeight >= slider.options.minFullScreenHeight) {
+                            methods.shell.updateHeight( newHeight );
+                        } else {
+                            methods.shell.updateHeight( slider.options.minFullScreenHeight );
+                        }
+                    }
+
+                    methods.shell.setStartOnSlideAnimation( slider.currentSlide );
+                });
+            },
+
             setupKeyboardNavigation: function() {
                 $(document).keydown(function(e) {
                     if (!slider.animating && slider.initialized) {
@@ -873,6 +892,16 @@
                         }
                     }
                 });
+            },
+
+            switchStateStartAndPause: function() {
+                if (slider.isPaused) {
+                    slider.control.$start.removeClass(namespace + 'auto-control-start-active');
+                    slider.control.$stop.addClass(namespace + 'auto-control-stop-active');
+                } else {
+                    slider.control.$start.addClass(namespace + 'auto-control-start-active');
+                    slider.control.$stop.removeClass(namespace + 'auto-control-stop-active');
+                }
             },
 
             loadElements: function( elements, callback ) {
@@ -915,16 +944,6 @@
                         }
                     }
                 }
-            },
-
-            switchStateStartAndPause: function() {
-                if (slider.isPaused) {
-                    slider.control.$start.removeClass(namespace + 'auto-control-start-active');
-                    slider.control.$stop.addClass(namespace + 'auto-control-stop-active');
-                } else {
-                    slider.control.$start.addClass(namespace + 'auto-control-start-active');
-                    slider.control.$stop.removeClass(namespace + 'auto-control-stop-active');
-                }
             }
         };
 
@@ -933,6 +952,9 @@
         \*------------------------------------*/
         // Group animations in one object
         slider.animationStore = {
+            forceUpdate: false,
+
+            // TODO: Remake this method, very badly looks.
             slideSingleItem: function( params ) {
                 if (slider.animating === false) {
                     var currentSlide = params.currentSlide,
@@ -1034,12 +1056,13 @@
                     slider.setSmoothHeight();
                 }
 
-                if (slider.options.auto && slider.options.kenBurn) {
+                if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
                     slider.control.$kenBurnContainer.stop().fadeOut(150);
                 }
             },
 
             onEndAnimate: function() {
+                slider.animationStore.forceUpdate = false;
                 slider.animating = false;
                 slider.setActive();
 
@@ -1059,7 +1082,7 @@
                     slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTransition() );
                 }
 
-                if (slider.options.auto && slider.options.kenBurn) {
+                if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
                     slider.control.$kenBurnContainer.stop().fadeIn(250);
                 }
 
@@ -1070,10 +1093,13 @@
 
             /**
              * Description: call objects which encapsulate actions and parameters.
-             * @type Command
+             *
+             * @command
              */
             execute: function( command ) {
-                if (!slider.isPaused && !slider.isStopped && slider.initialized) {
+                console.log(slider.animationStore.forceUpdate);
+                if (slider.isPaused && slider.initialized && slider.animationStore.forceUpdate ||
+                    !slider.isPaused && !slider.isStopped && slider.initialized) {
                     if (slider.options.auto) {
                         methods.autoPlay.startTime = null;
                         methods.autoPlay.spendTime = null;
@@ -1251,7 +1277,7 @@
 
         // kenBurn
         kenBurn: false,                   // Bool: Dependency auto()
-        kenBurnType: 'bar',               // String: bar, circle
+        kenBurnType: 'bar',               // String: [bar, circle]
 
         // Usability features
         shuffle: false,                   // Bool: ..
@@ -1274,93 +1300,6 @@
 })(jQuery, window, document, undefined);
 
 
-var slider = $('.my-slider').deviora({
-    auto: true,
-    kenBurn: true,
-    animation: 'slide',
-    kenBurnType: 'circle',
-    shuffle: false,
-    autoDelay: 3500,
-    speed: 1000,
-    pauseOnHover: true,
-
-    fullScreen: true,
-    responsive: true,
-    minFullScreenHeight: 350,
-    fullScreenOffsetY: $('.my-header'),
-
-    smoothHeight: false,
-    smoothHeightSpeed: 400,
-    // startHeight: 400,
-
-    startAt: 0,
-    directionNav: true,
-    paginationNav: true,
-    preloadImages: 'visible',
-    navigationText: ['Prev', 'Next'],
-
-    devBeforeSlide: function () {
-        //console.log('dev: devBeforeSlide() - Callback');
-    },
-
-    devAfterSlide: function () {
-        //console.log('dev: devAfterSlide() - Callback');
-    },
-
-    devBeforeInit: function() {
-        // console.log('dev: devBeforeSlide() - Callback');
-    },
-
-    devOnPause: function() {
-        // console.log('dev: devOnPause() - Callback');
-    },
-
-    devOnPlay: function() {
-        // console.log('dev: devOnPlay() - Callback');
-    },
-
-    devAfterInit: function() {
-        // console.log('dev: devAfterInit' - Callback);
-    }
-
-}).data('devioraSlider');
-
-
-
-
-
-
-/*------------------------------------*\
-    # API
-\*------------------------------------*/
-
-$('#nextTo').click(function () {
-    slider.nextSlide();
-    return false;
-});
-
-$('#prevTo').click(function () {
-    slider.prevSlide();
-    return false;
-});
-
-$('#pause').click(function () {
-    slider.pause();
-    // console.log(slider.getCurrentIndex());
-    // console.log(slider.getSlidesCount());
-    return false;
-});
-
-$('#play').click(function () {
-    slider.play();
-    return false;
-});
-
-$('#goToSlide').click(function () {
-    var val = $('#valueGoToSlide').val();
-    slider.goToNextSlide(val);
-    return false;
-});
 
 
 // Do not go on about their desires, develop willpower.
