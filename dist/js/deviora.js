@@ -1,7 +1,9 @@
-/**
- * Deviora slider - simple full size slider.
- *
- * @author: https://github.com/realgvard
+/**!
+ * deviora.js
+ * https://github.com/realgvard/devslider
+ * (c) Alexander Polischuck; License
+ * Created by: Alexander Polischuck
+ * Uses jquery.js
  */
 
 (function() {
@@ -13,6 +15,7 @@
 
     window.requestAnimationFrame = requestAnimationFrame;
 })();
+
 
 ;(function ( $, window, document, undefined ) {
     $.deviora = function( element, options ) {
@@ -28,6 +31,8 @@
             shortNamespace = namespace.replace(/[-|\s]+$/g, ''),
             eventType = "click touchend MSPointerUp keyup",
             pfxCSS3 = null;
+            // TODO: Make short fix focus, when occured slide animation.
+            // focusSlider = false;
             methods = {},
             publickMethods = {};
 
@@ -43,16 +48,17 @@
 
                 // Get current slide and make sure it is a number
                 slider.currentSlide = parseInt(slider.options.startAt ? slider.options.startAt : 0, 10);
-                slider.prevItem = slider.currentSlide;
+                slider.prevSlide = slider.currentSlide;
                 slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
-                slider.cloneCount = 0;
+                // slider.cloneCount = 0;
                 slider.control = {};
 
-                if (slider.options.animation === 'slide') {
-                    slider.cloneCount = 2;  // Add clone childs
-                }
+                // TODO: remove
+                // if (slider.options.animation === 'slide') {
+                //     slider.cloneCount = 2;  // Add clone childs
+                // }
 
                 // Bool setting ..
                 slider.initialized = false;
@@ -147,13 +153,6 @@
                     methods.shell.onMouseLeave();
                 });
 
-                // TODO: Need check all cases with hover of different components.
-                // slider.$wrapper.hover(function onWrapperMouseEnter(e) {
-                //     methods.shell.onMouseEnter();
-                // }, function onWrapperMouseLeave() {
-                //     methods.shell.onMouseLeave();
-                // });
-
                 // define load images
                 if(!!slider.options.preloadImages) {
                     methods.loadElements(preloadElements, methods.start);
@@ -230,9 +229,9 @@
                         });
                     }
 
-                    if (slider.options.animation === 'slide') {
-                        slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
-                            .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
+                    // if (slider.options.animation === 'slide') {
+                    //     slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
+                    //         .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
 
                         if (slider.options.fullScreen === true) {
                             slider.sliderWidth = $(window).width();
@@ -240,23 +239,29 @@
                             slider.sliderWidth = slider.width();
                         }
 
-                        methods.shell.updateWidth( slider.sliderWidth );
-                        $(slider.options.slideSelector, slider)
-                            .css({
-                                'float': 'left',
-                                // 'height': '100%',
-                                'display': 'block'
-                            });
+                    //     methods.shell.updateWidth( slider.sliderWidth );
+                    //     $(slider.options.slideSelector, slider)
+                    //         .css({
+                    //             'float': 'left',
+                    //             // 'height': '100%',
+                    //             'display': 'block'
+                    //         });
+
+                    //     slider.css({
+                    //         'width': (100 * (slider.count + slider.cloneCount)) + '%'
+                    //     });
+                    // } else if (slider.options.animation === 'fade') {
 
                         slider.css({
-                            'width': (100 * (slider.count + slider.cloneCount)) + '%'
+                            width: '100%',
+                            height: '100%'
                         });
-                    } else if (slider.options.animation === 'fade') {
-                        var maxHeight = Math.max.apply(Math, $(slider.$slides).map(function() {
-                            return $(this).height();
-                        }));
 
                         if (slider.options.fullScreen === false) {
+                            var maxHeight = Math.max.apply(Math, $(slider.$slides).map(function() {
+                                return $(this).height();
+                            }));
+
                             slider.css({
                                 'height': maxHeight + 'px'
                             });
@@ -272,13 +277,16 @@
                             'position': 'absolute',
                             'display': 'block',
                             'overflow': 'hidden',
-                            'visibility': 'visible',
+                            // 'visibility': 'visible',
                             'left': 0,
                             'top': 0,
-                            'z-index': 1,
-                            'opacity': 0
+                            'z-index': 1
                         });
-                    }
+
+                        if (slider.options.animation === 'fade') {
+                            slider.$slides.css('opacity', 0);
+                        }
+                    // }
                 },
 
                 // Build our slider with HTML
@@ -302,32 +310,19 @@
                     slider.$wrapper.append( slider.$viewport );
                 },
 
-                setStartOnSlideAnimation: function( index ) {
-                    if(slider.options.animation === 'slide') {
-                        var origin = -(slider.sliderWidth * (index + (slider.cloneCount / 2))) + 'px';
-
-                        if (slider.browser.transitions) {
-                            methods.doEmptyTransition();
-                            methods.doTranslate( origin );
-                        } else {
-                            methods.doCss2move( origin );
-                        }
-                    }
-                },
-
                 setStartSlide: function( index ) {
-                    methods.shell.setStartOnSlideAnimation(index);
-
-                    if(slider.options.animation === 'fade') {
+                    if (slider.options.animation === 'slide') {
+                        slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2 });
+                    } else if (slider.options.animation === 'fade') {
                         slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2, 'opacity': 1 });
                     }
                 },
 
                 setActive: function() {
-                    if (slider.prevItem !== slider.currentSlide) {
-                        $(slider.options.slideSelector, slider).eq(slider.prevItem + slider.cloneCount / 2).removeClass(namespace + 'active-slide');
+                    if (slider.prevSlide !== slider.currentSlide) {
+                        $(slider.options.slideSelector, slider).eq(slider.prevSlide).removeClass(namespace + 'active-slide');
                     }
-                    $(slider.options.slideSelector, slider).eq(slider.currentSlide + slider.cloneCount / 2).addClass(namespace + 'active-slide');
+                    $(slider.options.slideSelector, slider).eq(slider.currentSlide).addClass(namespace + 'active-slide');
                 },
 
                 updateWidth: function( value ) {
@@ -405,8 +400,13 @@
                         var $this = $(this),
                             target = $this.data(namespace + 'bullet');
 
+                        if (target > slider.currentSlide) {
+                            slider.direction = 'next';
+                        } else if (target < slider.currentSlide) {
+                            slider.direction = 'prev';
+                        }
+
                         if(target !== slider.currentSlide) {
-                            slider.direction = null;
                             slider.animationStore.forceUpdate = true;
                             slider.animationStore.execute({ currentSlide: target });
                         }
@@ -422,8 +422,8 @@
                 },
 
                 setActive: function() {
-                    if (slider.prevItem != slider.currentSlide) {
-                        slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.prevItem).removeClass(namespace + 'active');
+                    if (slider.prevSlide != slider.currentSlide) {
+                        slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.prevSlide).removeClass(namespace + 'active');
                     }
                     slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.currentSlide).addClass(namespace + 'active');
                 }
@@ -482,7 +482,7 @@
                             slider.autoTimeout = requestAnimationFrame(methods.autoPlay.run);
                         } else {
                             cancelAnimationFrame(slider.autoTimeout);
-                            slider.animateSlides();
+                            slider.animateToNextSlide();
                         }
                     }
                 },
@@ -641,6 +641,15 @@
                 return sender;
             },
 
+            getEmptyTranslate: function( posX ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = '';
+
+                return sender;
+            },
+
             getRotate: function( deg ) {
                 var sender = {},
                     prop = pfxCSS3 + 'transform';
@@ -650,21 +659,21 @@
                 return sender;
             },
 
-            doEmptyTransition: function() {
-                slider.css( methods.getEmptyTransition() );
-            },
+            // doEmptyTransition: function() {
+            //     slider.css( methods.getEmptyTransition() );
+            // },
 
-            doTransition: function( value ) {
-                slider.css( methods.getTransition(value) );
-            },
+            // doTransition: function( value ) {
+            //     slider.css( methods.getTransition(value) );
+            // },
 
-            doTranslate: function( posX ) {
-                slider.css(methods.getTranslate( parseFloat(posX) ));
-            },
+            // doTranslate: function( posX ) {
+            //     slider.css(methods.getTranslate( parseFloat(posX) ));
+            // },
 
-            doCss2move : function( posX ) {
-                slider.css('left', posX);
-            },
+            // doCss2move : function( posX ) {
+            //     slider.css('left', posX);
+            // },
 
             gestures: {
                 setupEvents: function() {
@@ -746,7 +755,7 @@
                         }
 
                         // block drag img element, TODO: need disable or not ?
-                        // e.preventDefault();ч
+                        // e.preventDefault();
 
                         if (slider.options.auto !== false) {
                             slider.pause();
@@ -814,13 +823,13 @@
                             //     slider.gesturesData.maximum
                             //     );
 
-                        if (slider.options.animation === 'slide') {
-                            if (slider.browser.transitions === true) {
-                                methods.doTranslate(slider.gesturesData.newPosX);
-                            } else {
-                                methods.doCss2move(slider.gesturesData.newPosX);
-                            }
-                        }
+                        // if (slider.options.animation === 'slide') {
+                        //     if (slider.browser.transitions === true) {
+                        //         methods.doTranslate(slider.gesturesData.newPosX);
+                        //     } else {
+                        //         methods.doCss2move(slider.gesturesData.newPosX);
+                        //     }
+                        // }
                     }
 
                     function onTouchEnd( event ) {
@@ -864,7 +873,7 @@
 
                     slider.sliderWidth = width;
 
-                    methods.shell.updateWidth( slider.sliderWidth );
+                    // methods.shell.updateWidth( slider.sliderWidth );
                     if (newHeight <= startHeight) {
                         if (newHeight >= slider.options.minFullScreenHeight) {
                             methods.shell.updateHeight( newHeight );
@@ -873,7 +882,7 @@
                         }
                     }
 
-                    methods.shell.setStartOnSlideAnimation( slider.currentSlide );
+                    // methods.shell.setStartOnSlideAnimation( slider.currentSlide );
                 });
             },
 
@@ -951,48 +960,50 @@
           - PUBLIC METHODS -
         \*------------------------------------*/
         // Group animations in one object
+        // TODO: Remake this method such Decorator.
         slider.animationStore = {
             forceUpdate: false,
 
-            // TODO: Remake this method, very badly looks.
             slideSingleItem: function( params ) {
                 if (slider.animating === false) {
                     var currentSlide = params.currentSlide,
-                        origin;
+                        $currentItem = slider.$slides.eq(currentSlide),
+                        $prevItem = slider.$slides.eq(slider.currentSlide),
+                        origin = slider.sliderWidth;
 
 
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
 
-                    // Catch animation first and last slide then move slide througt first and last position.
-                    if (slider.direction === 'next' && params.currentSlide === 0) {
-                        origin = -(slider.sliderWidth * (slider.count + slider.cloneCount / 2)) + 'px';
-                    } else if (slider.direction === 'prev' && params.currentSlide === slider.count - 1) {
-                        origin = -(slider.sliderWidth * (slider.cloneCount / 2 - 1)) + 'px';
-                    } else {
-                        origin = -(slider.sliderWidth * (currentSlide + slider.cloneCount / 2)) + 'px';
-                    }
-
-                    slider.prevItem = slider.currentSlide;
+                    slider.prevSlide = slider.currentSlide;
                     slider.currentSlide = currentSlide;
                     slider.animating = true;
+
+                    if (slider.direction === 'prev') {
+                        origin *= -1;
+                    }
 
                     if (slider.browser.transitions) {
                         var transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
                         slider.animationStore.onStartAnimate();
 
-                        methods.doTransition('transform ' + slider.options.speed + 'ms');
-                        methods.doTranslate(origin);
+                        $currentItem.css(methods.getTranslate( origin ));
+                        setTimeout(function() {
+                            $prevItem.css({ 'zIndex': 2 });
+                            $currentItem.css({ 'zIndex': 3 });
+                            $currentItem.css(methods.getTransition('transform ' + slider.options.speed + 'ms'));
+                            $currentItem.css(methods.getTranslate(0));
 
-                        slider.on(transitionEnd, function() {
-                            slider.off(transitionEnd);
-                            slider.animationStore.onEndAnimate();
-                        });
+                            $currentItem.on(transitionEnd, function() {
+                                slider.off(transitionEnd);
+                                slider.animationStore.onEndAnimate();
+                            });
+                        }, 20);
+
                     } else {
                         slider.animationStore.onStartAnimate();
-
-                        slider.animate({ 'left': origin }, {
+                        $currentItem.css('left', origin).animate({ 'left': 0 }, {
                             duration: slider.options.speed,
                             specialEasing: {
                                 'left': slider.options.easing
@@ -1015,7 +1026,7 @@
                     // API: Before slide - Callback
                     slider.options.devBeforeSlide();
 
-                    slider.prevItem = slider.currentSlide;
+                    slider.prevSlide = slider.currentSlide;
                     slider.currentSlide = currentSlide;
                     slider.animating = true;
 
@@ -1057,7 +1068,7 @@
                 }
 
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
-                    slider.control.$kenBurnContainer.stop().fadeOut(150);
+                    slider.control.$kenBurnContainer.stop(true).fadeOut(150);
                 }
             },
 
@@ -1070,20 +1081,17 @@
                     methods.autoPlay.start();
                 }
 
-                // Set index to default position
-                if(slider.options.animation === 'slide') {
-                    if (slider.direction === 'next' && slider.currentSlide === 0) {
-                        methods.shell.setStartSlide(0);
-                    } else if (slider.direction === 'prev' && slider.currentSlide === slider.count - 1) {
-                        methods.shell.setStartSlide(slider.count - 1);
-                    }
-                } else {
-                    slider.$slides.eq(slider.prevItem).css( methods.getEmptyTransition() );
-                    slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTransition() );
+                if (slider.options.animation === 'slide') {
+                    slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTranslate() );
+                    slider.$slides.eq(slider.prevSlide).css({ 'zIndex': 1 });
+                    slider.$slides.eq(slider.currentSlide).css({ 'zIndex': 2 });
                 }
 
+                slider.$slides.eq(slider.prevSlide).css( methods.getEmptyTransition() );
+                slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTransition() );
+
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
-                    slider.control.$kenBurnContainer.stop().fadeIn(250);
+                    slider.control.$kenBurnContainer.stop(true).fadeIn(250);
                 }
 
                 // API: After slide - Callback
@@ -1094,10 +1102,9 @@
             /**
              * Description: call objects which encapsulate actions and parameters.
              *
-             * @command
+             * @pattern - commander
              */
             execute: function( command ) {
-                console.log(slider.animationStore.forceUpdate);
                 if (slider.isPaused && slider.initialized && slider.animationStore.forceUpdate ||
                     !slider.isPaused && !slider.isStopped && slider.initialized) {
                     if (slider.options.auto) {
@@ -1106,7 +1113,7 @@
                         cancelAnimationFrame(slider.autoTimeout);
                     }
 
-                    if (slider.options.kenBurn) {
+                    if (slider.options.auto && slider.options.kenBurn) {
                         methods.kenBurn.reset();
                     }
 
@@ -1127,7 +1134,7 @@
             }
         };
 
-        slider.animateSlides = function() {
+        slider.animateToNextSlide = function() {
             var target = slider.getIndexCalcDir('next');
             slider.animationStore.execute({ currentSlide: target });
         };
@@ -1167,6 +1174,11 @@
             });
         };
 
+        /**
+         * Iterator slides
+         * @param dir - string value
+         * @return number
+         */
         slider.getIndexCalcDir = function( dir ) {
             slider.direction = dir;
             if (dir === 'next') {
@@ -1244,6 +1256,7 @@
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
         animation: 'slide',               // String [slide, fade]: ..
+        // TODO: Make CSS3 ease with callback css2.
         easing: 'swing',                  // String:
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
@@ -1298,8 +1311,6 @@
     };
 
 })(jQuery, window, document, undefined);
-
-
 
 
 // Do not go on about their desires, develop willpower.

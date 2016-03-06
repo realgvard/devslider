@@ -1,8 +1,9 @@
 var slider = $('.my-slider').deviora({
-    auto: true,
+    auto: false,
     kenBurn: true,
     animation: 'slide',
     kenBurnType: 'bar',
+    // easing: 'ease',
     shuffle: false,
     autoDelay: 3500,
     speed: 1000,
