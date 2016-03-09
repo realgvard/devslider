@@ -33,6 +33,8 @@
             pfxCSS3 = null;
             // TODO: Make short fix focus, when occured slide animation.
             // focusSlider = false;
+            preloadElements = null,
+            preloader = null,
             methods = {},
             publickMethods = {};
 
@@ -52,13 +54,7 @@
                 slider.$slides = $(slider.options.slideSelector, slider);
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
-                // slider.cloneCount = 0;
                 slider.control = {};
-
-                // TODO: remove
-                // if (slider.options.animation === 'slide') {
-                //     slider.cloneCount = 2;  // Add clone childs
-                // }
 
                 // Bool setting ..
                 slider.initialized = false;
@@ -73,10 +69,6 @@
                 slider.options.devBeforeInit();
 
                 methods.checkBrowser();
-
-                if(!!slider.options.preloadImages) {
-                    slider.$preloader = $('<div class="' + namespace + 'preloader"></div>');
-                }
 
                 // Shuffle:
                 if (slider.options.shuffle) {
@@ -94,12 +86,11 @@
                 if (slider.options.paginationNav) methods.paginationNav.setup();
 
                 // Auto Controls:
-                if (slider.options.auto && slider.options.autoControls) methods.autoControls();
+                if (slider.options.auto && slider.options.autoControls) methods.autoControls.setup();
 
                 // Ken Burn:
                 if (slider.options.auto && slider.options.kenBurn) methods.kenBurn.setup();
 
-                var preloadElements;
                 if(!!slider.options.preloadImages) {
                     if (slider.options.preloadImages === 'visible') {
                         preloadElements = slider.$slides.eq(slider.currentSlide);
@@ -163,9 +154,11 @@
 
             start: function() {
                 // Remove preloader
-                if(!!slider.options.preloadImages) {
-                    slider.$preloader.remove();
-                    delete slider.$preloader;
+                if(!!slider.options.preloadImages && preloader !== null) {
+                    preloader.fadeOut(500, function() {
+                        $(this).remove();
+                        preloader = null;
+                    });
                 }
 
                 // After build slider
@@ -188,8 +181,8 @@
                     // Set basic CSS class
                     slider.addClass(namespace + 'slider');
 
-                    if (slider.options.startHeight != 0) {
-                        var startHeight = slider.options.startHeight.length != null ? slider.options.startHeight.height() : slider.options.startHeight;
+                    if (slider.options.startHeight !== 0) {
+                        var startHeight = slider.options.startHeight.length !== null ? slider.options.startHeight.height() : slider.options.startHeight;
                         if (slider.options.fullScreen === true) {
                             if (slider.options.startHeight > slider.options.minFullScreenHeight) {
                                 slider.$wrapper.height( startHeight );
@@ -229,64 +222,46 @@
                         });
                     }
 
-                    // if (slider.options.animation === 'slide') {
-                    //     slider.append( slider.$slides.first().clone(true).addClass('clone').attr('aria-hidden', 'true') )
-                    //         .prepend( slider.$slides.last().clone(true).addClass('clone').attr('aria-hidden', 'true') );
+                    if (slider.options.fullScreen === true) {
+                        slider.sliderWidth = $(window).width();
+                    } else {
+                        slider.sliderWidth = slider.width();
+                    }
 
-                        if (slider.options.fullScreen === true) {
-                            slider.sliderWidth = $(window).width();
-                        } else {
-                            slider.sliderWidth = slider.width();
-                        }
+                    slider.css({
+                        width: '100%',
+                        height: '100%'
+                    });
 
-                    //     methods.shell.updateWidth( slider.sliderWidth );
-                    //     $(slider.options.slideSelector, slider)
-                    //         .css({
-                    //             'float': 'left',
-                    //             // 'height': '100%',
-                    //             'display': 'block'
-                    //         });
-
-                    //     slider.css({
-                    //         'width': (100 * (slider.count + slider.cloneCount)) + '%'
-                    //     });
-                    // } else if (slider.options.animation === 'fade') {
+                    if (slider.options.fullScreen === false) {
+                        var maxHeight = Math.max.apply(Math, $(slider.$slides).map(function() {
+                            return $(this).height();
+                        }));
 
                         slider.css({
-                            width: '100%',
-                            height: '100%'
+                            'height': maxHeight + 'px'
                         });
+                    }
 
-                        if (slider.options.fullScreen === false) {
-                            var maxHeight = Math.max.apply(Math, $(slider.$slides).map(function() {
-                                return $(this).height();
-                            }));
+                    if(!slider.options.smoothHeight) {
+                        slider.$slides.css('height', '100%');
+                    }
 
-                            slider.css({
-                                'height': maxHeight + 'px'
-                            });
-                        }
+                    slider.$slides.css({
+                        'width': '100%',
+                        // 'height': '100%',
+                        'position': 'absolute',
+                        'display': 'block',
+                        'overflow': 'hidden',
+                        // 'visibility': 'visible',
+                        'left': 0,
+                        'top': 0,
+                        'z-index': 1
+                    });
 
-                        if(!slider.options.smoothHeight) {
-                            slider.$slides.css('height', '100%');
-                        }
-
-                        slider.$slides.css({
-                            'width': '100%',
-                            // 'height': '100%',
-                            'position': 'absolute',
-                            'display': 'block',
-                            'overflow': 'hidden',
-                            // 'visibility': 'visible',
-                            'left': 0,
-                            'top': 0,
-                            'z-index': 1
-                        });
-
-                        if (slider.options.animation === 'fade') {
-                            slider.$slides.css('opacity', 0);
-                        }
-                    // }
+                    if (slider.options.animation === 'fade') {
+                        slider.$slides.css('opacity', 0);
+                    }
                 },
 
                 // Build our slider with HTML
@@ -301,11 +276,6 @@
                         'overflow': 'hidden',
                         'position': 'relative'
                     });
-
-                    // Append preloader
-                    if(!!slider.options.preloadImages) {
-                        slider.$viewport.append( slider.$preloader );
-                    }
 
                     slider.$wrapper.append( slider.$viewport );
                 },
@@ -415,48 +385,44 @@
                     slider.$wrapper.append( slider.control.$paginationNav );
                 },
 
-                update: function() {
-                    for (var i = 0, len = slider.count; i < len; i++) {
-                        $('.' + namespace + 'pagination-nav li a', slider.$wrapper).data(namespace + 'bullet', i);
-                    }
-                },
-
                 setActive: function() {
-                    if (slider.prevSlide != slider.currentSlide) {
+                    if (slider.prevSlide !== slider.currentSlide) {
                         slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.prevSlide).removeClass(namespace + 'active');
                     }
                     slider.control.$paginationNav.children('.' + namespace + 'bullet').eq(slider.currentSlide).addClass(namespace + 'active');
                 }
             },
 
-            autoControls: function() {
-                slider.control.$start =
-                    $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-start"></div>');
-                slider.control.$stop =
-                    $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-stop"></div>');
+            autoControls: {
+                setup: function() {
+                    slider.control.$start =
+                        $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-start"></div>');
+                    slider.control.$stop =
+                        $('<div class="' + namespace + 'auto-control-item ' + namespace + 'auto-control-stop"></div>');
 
-                if (!slider.options.paginationNav) {
-                    var $directionNavScaffold =
-                        $('<div class="' + namespace + 'auto-control-block"></div>');
-                    $directionNavScaffold.append([slider.control.$start, slider.control.$stop])
-                }
+                    if (!slider.options.paginationNav) {
+                        var $directionNavScaffold =
+                            $('<div class="' + namespace + 'auto-control-block"></div>');
+                        $directionNavScaffold.append([slider.control.$start, slider.control.$stop])
+                    }
 
 
-                slider.control.$start.on('click', function() {
-                    slider.play();
-                });
+                    slider.control.$start.on('click', function() {
+                        slider.play();
+                    });
 
-                slider.control.$stop.on('click', function() {
-                    publickMethods.pause();
-                });
+                    slider.control.$stop.on('click', function() {
+                        publickMethods.pause();
+                    });
 
-                methods.switchStateStartAndPause();
+                    methods.switchStateStartAndPause();
 
-                if (!slider.options.paginationNav) {
-                    slider.$wrapper.append( $directionNavScaffold );
-                } else {
-                    slider.control.$paginationNav.prepend(slider.control.$start);
-                    slider.control.$paginationNav.append(slider.control.$stop);
+                    if (!slider.options.paginationNav) {
+                        slider.$wrapper.append( $directionNavScaffold );
+                    } else {
+                        slider.control.$paginationNav.prepend(slider.control.$start);
+                        slider.control.$paginationNav.append(slider.control.$stop);
+                    }
                 }
             },
 
@@ -613,67 +579,6 @@
                     transitions: supportTransitions
                 };
             },
-
-            getEmptyTransition: function() {
-                var sender = {},
-                    prop = pfxCSS3 + 'transition';
-
-                sender[prop] = '';
-
-                return sender;
-            },
-
-            getTransition: function( value ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transition';
-
-                sender[prop] = value;
-
-                return sender;
-            },
-
-            getTranslate: function( posX ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transform';
-
-                sender[prop] = 'translate3d(' + posX + 'px, 0px, 0px)';
-
-                return sender;
-            },
-
-            getEmptyTranslate: function( posX ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transform';
-
-                sender[prop] = '';
-
-                return sender;
-            },
-
-            getRotate: function( deg ) {
-                var sender = {},
-                    prop = pfxCSS3 + 'transform';
-
-                sender[prop] = 'rotate(' + deg + 'deg)';
-
-                return sender;
-            },
-
-            // doEmptyTransition: function() {
-            //     slider.css( methods.getEmptyTransition() );
-            // },
-
-            // doTransition: function( value ) {
-            //     slider.css( methods.getTransition(value) );
-            // },
-
-            // doTranslate: function( posX ) {
-            //     slider.css(methods.getTranslate( parseFloat(posX) ));
-            // },
-
-            // doCss2move : function( posX ) {
-            //     slider.css('left', posX);
-            // },
 
             gestures: {
                 setupEvents: function() {
@@ -915,7 +820,16 @@
 
             loadElements: function( elements, callback ) {
                 var total = slider.find(elements).length,
-                    count = 0;
+                    count = 0,
+                    timer;
+
+                // Append preloader
+                if(!!slider.options.preloadImages) {
+                    timer = setTimeout(function() {
+                        preloader = slider.options.preloader || $('<div class="' + namespace + 'preloader"></div>');
+                        slider.$viewport.append( preloader ).hide().fadeIn(350);
+                    }, 100);
+                }
 
                 if (total === 0) {
                     callback();
@@ -930,6 +844,8 @@
 
                         if(count === total) {
                             window.removeEventListener('error', onErrorEvent, true);
+                            preloadElements = null;
+                            clearTimeout(timer);
                             callback();
                         }
                     }).each(function() {
@@ -953,6 +869,51 @@
                         }
                     }
                 }
+            },
+
+            getEmptyTransition: function() {
+                var sender = {},
+                    prop = pfxCSS3 + 'transition';
+
+                sender[prop] = '';
+
+                return sender;
+            },
+
+            getTransition: function( value ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transition';
+
+                sender[prop] = value;
+
+                return sender;
+            },
+
+            getTranslate: function( posX ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'translate3d(' + posX + 'px, 0px, 0px)';
+
+                return sender;
+            },
+
+            getEmptyTranslate: function( posX ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = '';
+
+                return sender;
+            },
+
+            getRotate: function( deg ) {
+                var sender = {},
+                    prop = pfxCSS3 + 'transform';
+
+                sender[prop] = 'rotate(' + deg + 'deg)';
+
+                return sender;
             }
         };
 
@@ -960,7 +921,7 @@
           - PUBLIC METHODS -
         \*------------------------------------*/
         // Group animations in one object
-        // TODO: Remake this method such Decorator.
+        // TODO: Remake this method such as Decorator.
         slider.animationStore = {
             forceUpdate: false,
 
@@ -992,7 +953,7 @@
                         setTimeout(function() {
                             $prevItem.css({ 'zIndex': 2 });
                             $currentItem.css({ 'zIndex': 3 });
-                            $currentItem.css(methods.getTransition('transform ' + slider.options.speed + 'ms'));
+                            $currentItem.css(methods.getTransition('transform ' + slider.options.speed + 'ms ' + slider.options.css3easing));
                             $currentItem.css(methods.getTranslate(0));
 
                             $currentItem.on(transitionEnd, function() {
@@ -1006,7 +967,7 @@
                         $currentItem.css('left', origin).animate({ 'left': 0 }, {
                             duration: slider.options.speed,
                             specialEasing: {
-                                'left': slider.options.easing
+                                'left': 'swing'
                             },
                             complete: function() {
                                 slider.animationStore.onEndAnimate();
@@ -1034,8 +995,8 @@
                         var transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
                         slider.animationStore.onStartAnimate();
-                        $currentItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms'));
-                        $prevItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms'));
+                        $currentItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
+                        $prevItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
 
                         $prevItem.css({ 'opacity': 0, 'zIndex': 1 });
                         $currentItem.css({ 'opacity': 1, 'zIndex': 2 });
@@ -1046,13 +1007,13 @@
                         });
                     } else {
                         slider.animationStore.onStartAnimate();
-                        $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, slider.options.easing);
+                        $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, 'swing');
 
                         $currentItem.css('zIndex', 2)
                                     .animate({ 'opacity': 1 }, {
                                         duration: slider.options.speed,
                                         specialEasing: {
-                                            'opacity': slider.options.easing
+                                            'opacity': 'swing'
                                         },
                                         complete: function() {
                                             slider.animationStore.onEndAnimate();
@@ -1117,7 +1078,7 @@
                         methods.kenBurn.reset();
                     }
 
-                    if(slider.options.animation === 'slide') {
+                    if (slider.options.animation === 'slide') {
                         this.slideSingleItem(command);
                     } else if (slider.options.animation === 'fade') {
                         this.fadeSingleItem(command);
@@ -1169,7 +1130,7 @@
             }, {
                 duration: (slider.options.smoothHeightSpeed === 0) ? slider.options.speed : slider.options.smoothHeightSpeed,
                 specialEasing: {
-                    'height': slider.options.easing
+                    'height': 'swing'
                 }
             });
         };
@@ -1255,24 +1216,24 @@
         // Most important dev features
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
-        animation: 'slide',               // String [slide, fade]: ..
+        animation: 'slide',               // String: [slide, fade, random]: ..
         // TODO: Make CSS3 ease with callback css2.
-        easing: 'swing',                  // String:
+        css3easing: 'ease',                  // String:
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
 
-        // Mouse events
+        // Mouse Events
         touch: true,                      // Bool: ..
 
-        // Full screen
+        // Full Screen
         fullScreen: false,                // Bool: ..
         fullScreenOffsetY: 0,             // [jQuery Obj, Int, String]: ..
         minFullScreenHeight: 0,           // [Int, String]: ..
 
-        // Keyboard navigation
+        // Keyboard Navigation
         keyboardControl: true,
 
-        // Auto play
+        // Auto Play
         auto: true,                       // Bool: ..
         autoControls: true,               // Bool: ..
         autoDelay: 5000,                  // Integer [0...]: ..
@@ -1288,17 +1249,20 @@
         // Keyboard
         keyboardNavigation: true,         // Bool: ..
 
-        // kenBurn
+        // Ken Burn
         kenBurn: false,                   // Bool: Dependency auto()
         kenBurnType: 'bar',               // String: [bar, circle]
 
-        // Usability features
+        // Usability Features
         shuffle: false,                   // Bool: ..
         startAt: 0,                       // Integer [0...]:
         smoothHeight: false,              // Bool: ..
         smoothHeightSpeed: 0,             // [Bool, Int]: ..
         startHeight: 0,                   // [jQuery Obj, Int, String]: ..
         responsive: false,                // Bool: ..
+
+        // Preloader
+        preloader: null,                  // [jQuery Obj, null]
 
 
         // Callbacks API

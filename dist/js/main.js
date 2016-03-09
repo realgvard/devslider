@@ -1,28 +1,55 @@
 var slider = $('.my-slider').deviora({
-    auto: false,
-    kenBurn: true,
-    animation: 'slide',
-    kenBurnType: 'bar',
-    // easing: 'ease',
-    shuffle: false,
-    autoDelay: 3500,
-    speed: 1000,
-    pauseOnHover: true,
 
-    fullScreen: true,
-    responsive: true,
-    minFullScreenHeight: 350,
-    fullScreenOffsetY: $('.my-header'),
+    // Most important dev features
+    namespace: 'dev-',                // String, Integer:
+    slideSelector: '> li',            // String:
+    animation: 'slide',               // String: [slide, fade, random]: ..
+    // TODO: Make CSS3 ease with callback css2.
+    easing: 'ease',                  // String:
+    speed: 600,                       // Integer: [0...]:
+    preloadImages: 'visible',         // String: visible, all, false
 
-    smoothHeight: false,
-    smoothHeightSpeed: 400,
-    // startHeight: 400,
+    // Mouse Events
+    touch: true,                      // Bool: ..
 
-    startAt: 0,
-    directionNav: true,
-    paginationNav: true,
-    preloadImages: 'visible',
-    navigationText: ['Prev', 'Next'],
+    // Full Screen
+    fullScreen: true,                // Bool: ..
+    fullScreenOffsetY: 0,             // [jQuery Obj, Int, String]: ..
+    minFullScreenHeight: 0,           // [Int, String]: ..
+
+    // Keyboard Navigation
+    keyboardControl: true,
+
+    // Auto Play
+    auto: true,                       // Bool: ..
+    autoControls: true,               // Bool: ..
+    autoDelay: 5000,                  // Integer [0...]: ..
+    pauseOnHover: false,              // Bool: ..
+
+    // Pagination
+    directionNav: true,               // Bool: ..
+
+    // Navigation
+    paginationNav: true,              // Bool: ..
+    navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
+
+    // Keyboard
+    keyboardNavigation: true,         // Bool: ..
+
+    // Ken Burn
+    kenBurn: true,                   // Bool: Dependency auto()
+    kenBurnType: 'bar',               // String: [bar, circle]
+
+    // Usability Features
+    shuffle: false,                   // Bool: ..
+    startAt: 0,                       // Integer [0...]:
+    smoothHeight: false,              // Bool: ..
+    smoothHeightSpeed: 0,             // [Bool, Int]: ..
+    startHeight: 0,                   // [jQuery Obj, Int, String]: ..
+    responsive: false,                // Bool: ..
+
+    // Preloader
+    preloader: null,                  // [jQuery Obj, null]
 
     devBeforeSlide: function () {
         //console.log('dev: devBeforeSlide() - Callback');
