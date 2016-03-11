@@ -1,11 +1,11 @@
-var slider = $('.my-slider').deviora({
+var slider = $('.fullSizeSlider').deviora({
 
     // Most important dev features
     namespace: 'dev-',                // String, Integer:
     slideSelector: '> li',            // String:
-    animation: 'slide',               // String: [slide, fade, random]: ..
+    animation: 'fade',               // String: [slide, fade, random]: ..
     // TODO: Make CSS3 ease with callback css2.
-    easing: 'ease',                  // String:
+    css3easing: 'ease',                  // String:
     speed: 600,                       // Integer: [0...]:
     preloadImages: 'visible',         // String: visible, all, false
 
@@ -14,7 +14,7 @@ var slider = $('.my-slider').deviora({
 
     // Full Screen
     fullScreen: true,                // Bool: ..
-    fullScreenOffsetY: 0,             // [jQuery Obj, Int, String]: ..
+    fullScreenOffsetY: $('.ui-header-block'),             // [jQuery Obj, Int, String]: ..
     minFullScreenHeight: 0,           // [Int, String]: ..
 
     // Keyboard Navigation

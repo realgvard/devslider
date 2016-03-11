@@ -3,53 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <title>DevioraSlider</title>
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../dist/css/style.css">
 </head>
 <body>
 
-    <div class="my-header">
-        <h1>Deviora</h1>
+    <div class="ui-header-block">
+        <h1>Deviora <small>slider</small></h1>
     </div>
 
-    <ul class="my-slider">
+    <ul class="fullSizeSlider">
         <li>
-            <div class="dev-block">
-                <div class="dev-text">1</div>
-                <img src="http://xdan.ru/images/joomla/modules/suff/second/nicewallpaper.jpg" alt="">
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_1.jpg" alt="">
+            </div>
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>Deviora Slider</h3>
+                    <div class="ui-help-text">Make simple things together</div>
+                </div>
             </div>
         </li>
         <li>
-            <div class="dev-block">
-                <div class="dev-text">2</div>
-                <img src="../dist/img/flower1.jpg" alt="">
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_2.jpg" alt="">
+            </div>
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>Ken burns</h3>
+                    <div class="ui-help-text">In a smooth way</div>
+                </div>
             </div>
         </li>
         <li>
-            <div class="dev-block">
-                <div class="dev-text">3</div>
-                <img src="../dist/img/flower1.jpg" alt="">
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_3.jpg" alt="">
             </div>
-        </li>
-        <li>
-            <div class="dev-block">
-                <div class="dev-text">4</div>
-                <img src="../dist/img/flower1.jpg" alt="">
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>All these features</h3>
+                    <div class="ui-help-text">Much more!</div>
+                </div>
             </div>
         </li>
     </ul>
 
-     <div class="dev-wrapper pubApi">
-        <b>Public API:</b><br>
+    <div class="container">
+        <h4 class="page-header">Documentation</h4>
+
+        <a href="http://github.com/realgvard/devslider" target="blank">Open in new tab</a>
+
+        <div class="space40"></div>
+
+        <h4 class="page-header">Public API:</h4>
+
         <a href="" id="prevTo">prevTo</a>
         <a href="" id="nextTo">nextTo</a>
         <a href="" id="pause">pause</a>
         <a href="" id="play">play</a>
         <a href="" id="goToSlide">goToSlide</a> <input type="number" id="valueGoToSlide" value="0" style="width: 30px;">
+
+        <div class="space100"></div>
     </div>
+
+
 
 
     <script src="../assets/js/jquery.min.js"></script>
     <script src="../dist/js/deviora.js"></script>
-    <script src="../dist/js/main.js"></script>
+    <script src="../dist/js/loader.js"></script>
 </body>
 </html>

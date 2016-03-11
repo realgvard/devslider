@@ -1,30 +1,68 @@
-h1 {
-    margin: 0;
-}
-
-
-
-/*------------------------------------*\
-    # TRASH
-\*------------------------------------*/
 
 .dev-text {
-  position: absolute;
-  top: 0;
-  left: 0;
-  color: #fff;
-  z-index: 1;
-}
-.dev-block {
-  position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #fff;
+    z-index: 1;
 }
 .pubApi {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: auto;
-  z-index: 100;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: auto;
+    z-index: 100;
 }
-.my-header {
-  height: 50px;
+.ui-header-block {
+    height: 70px;
+    padding: 0 20px;
+    h1 {
+        height: inherit;
+        line-height: 70px;
+        margin: 0;
+    }
+}
+.ui-slide-block {
+    width: 100%;
+    height: 100%;
+}
+.ui-content-slider-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #fff;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+
+    &:before {
+        content: '';
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+        margin-left: -5px;
+        height: 100%;
+    }
+}
+.ui-content-slider-text {
+    display: inline-block;
+    vertical-align: middle;
+    background: rgba(0,0,0, 0.3);
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    h3 {
+        margin: 0;
+        font-size: 40px;
+        line-height: 40px;
+    }
+}
+.ui-help-text {
+    margin-top: 7px;
+}
+.space40 {
+    height: 40px;
+}
+.space100 {
+    height: 100px;
 }

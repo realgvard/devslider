@@ -1,0 +1,1 @@
+##Deviora slider 1.0.0

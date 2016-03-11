@@ -251,13 +251,13 @@
                         'width': '100%',
                         // 'height': '100%',
                         'position': 'absolute',
-                        'display': 'block',
+                        'display': 'none',
                         'overflow': 'hidden',
                         // 'visibility': 'visible',
                         'left': 0,
                         'top': 0,
                         'z-index': 1
-                    });
+                    }).eq(slider.currentSlide).show();
 
                     if (slider.options.animation === 'fade') {
                         slider.$slides.css('opacity', 0);
@@ -754,7 +754,7 @@
                         }
 
                         if (slider.gesturesData.newRelativeX !== 0) {
-                            console.log(target);
+                            slider.animationStore.forceUpdate = true;
                             slider.animationStore.execute({ currentSlide: target });
                         }
 
@@ -995,11 +995,13 @@
                         var transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
                         slider.animationStore.onStartAnimate();
-                        $currentItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
-                        $prevItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
+                        setTimeout(function() {
+                            $currentItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
+                            $prevItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
 
-                        $prevItem.css({ 'opacity': 0, 'zIndex': 1 });
-                        $currentItem.css({ 'opacity': 1, 'zIndex': 2 });
+                            $prevItem.css({ 'opacity': 0, 'zIndex': 1 });
+                            $currentItem.css({ 'opacity': 1, 'zIndex': 2 });
+                        }, 20);
 
                         $currentItem.on(transitionEnd, function() {
                             slider.off(transitionEnd);
@@ -1028,6 +1030,8 @@
                     slider.setSmoothHeight();
                 }
 
+                slider.$slides.eq(slider.currentSlide).show();
+
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
                     slider.control.$kenBurnContainer.stop(true).fadeOut(150);
                 }
@@ -1037,6 +1041,8 @@
                 slider.animationStore.forceUpdate = false;
                 slider.animating = false;
                 slider.setActive();
+
+                slider.$slides.eq(slider.prevSlide).hide();
 
                 if (slider.options.auto) {
                     methods.autoPlay.start();
@@ -1108,20 +1114,17 @@
             }
 
             methods.switchStateStartAndPause();
-
-            // console.log('dev: slider.isPaused()');
         };
 
         slider.play = function() {
             slider.isPaused = false;
+            slider.isStopped = false;
 
             if (slider.options.auto) {
                 methods.autoPlay.setLastDate();
             }
 
             methods.switchStateStartAndPause();
-
-            // console.log('dev: slider.play()');
         };
 
         slider.setSmoothHeight = function() {
@@ -1217,8 +1220,7 @@
         namespace: 'dev-',                // String, Integer:
         slideSelector: '> li',            // String:
         animation: 'slide',               // String: [slide, fade, random]: ..
-        // TODO: Make CSS3 ease with callback css2.
-        css3easing: 'ease',                  // String:
+        css3easing: 'ease',               // String:
         speed: 600,                       // Integer: [0...]:
         preloadImages: 'visible',         // String: visible, all, false
 
