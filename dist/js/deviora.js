@@ -773,7 +773,7 @@
                 $(window).resize(function() {
                     var width = $(this).width(),
                         // height = $(this).height(),
-                        different = slider.sliderWidth / startWidth,
+                        different = slider.sliderWidth / startWidth * 1.1,
                         newHeight = startHeight * different;
 
                     slider.sliderWidth = width;

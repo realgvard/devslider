@@ -24,7 +24,7 @@ var slider = $('.fullSizeSlider').deviora({
     auto: true,                       // Bool: ..
     autoControls: true,               // Bool: ..
     autoDelay: 5000,                  // Integer [0...]: ..
-    pauseOnHover: false,              // Bool: ..
+    pauseOnHover: true,              // Bool: ..
 
     // Pagination
     directionNav: true,               // Bool: ..
@@ -46,7 +46,7 @@ var slider = $('.fullSizeSlider').deviora({
     smoothHeight: false,              // Bool: ..
     smoothHeightSpeed: 0,             // [Bool, Int]: ..
     startHeight: 0,                   // [jQuery Obj, Int, String]: ..
-    responsive: false,                // Bool: ..
+    responsive: true,                // Bool: ..
 
     // Preloader
     preloader: null,                  // [jQuery Obj, null]
@@ -95,8 +95,8 @@ $('#prevTo').click(function () {
 
 $('#pause').click(function () {
     slider.pause();
-    // console.log(slider.getCurrentIndex());
-    // console.log(slider.getSlidesCount());
+    console.log(slider.getCurrentIndex());
+    console.log(slider.getSlidesCount());
     return false;
 });
 

@@ -25,6 +25,7 @@
 *.rar
 *.tar
 *.zip
+*.idea
 
 # Logs and databases #
 ######################
