@@ -3,7 +3,7 @@ var slider = $('.fullSizeSlider').deviora({
     // Most important dev features
     namespace: 'dev-',                // String, Integer:
     slideSelector: '> li',            // String:
-    animation: 'fade',               // String: [slide, fade, random]: ..
+    animation: 'random',               // String: [slide, fade, random]: ..
     // TODO: Make CSS3 ease with callback css2.
     css3easing: 'ease',                  // String:
     speed: 600,                       // Integer: [0...]:

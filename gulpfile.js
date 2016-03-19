@@ -9,16 +9,16 @@ var sourcemaps   = require('gulp-sourcemaps');
 
 var app = {
     pub: ''
-}
+};
 
 gulp.task('sass', function () {
-    gulp.src('assets/sass/*.scss')
+    gulp.src('assets/sass/scaffold/*.scss')
         .pipe(sourcemaps.init())
         .pipe(sass.sync().on('error', notify.onError("Error: <%= error.message %>")))
         .pipe(plumber.stop())
 
         // dist result
-        .pipe(sass({outputStyle: 'compressed'}))
+        .pipe(sass({ outputStyle: 'compressed' }))
         .pipe(autoprefixer({
             browsers: ['last 2 versions'],
             cascade: false

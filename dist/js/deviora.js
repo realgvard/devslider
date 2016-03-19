@@ -34,6 +34,8 @@
             // TODO: Make short fix focus, when occured slide animation.
             // focusSlider = false;
             preloadElements = null,
+            possibleAnimations = ['slide', 'fade'],
+            currentAnimation = '',
             preloader = null,
             methods = {},
             publickMethods = {};
@@ -55,6 +57,12 @@
                 slider.count = slider.$slides.length;
                 slider.lastItem = slider.count - 1;
                 slider.control = {};
+
+                if (slider.options.animation === 'random') {
+                    currentAnimation = possibleAnimations[methods.getRandom(0, possibleAnimations.length)];
+                } else {
+                    currentAnimation = slider.options.animation;
+                }
 
                 // Bool setting ..
                 slider.initialized = false;
@@ -172,7 +180,7 @@
                 // API: After init - Callback
                 slider.options.devAfterInit();
 
-                console.log(slider);
+                // console.log(slider);
             },
 
             shell: {
@@ -259,7 +267,7 @@
                         'z-index': 1
                     }).eq(slider.currentSlide).show();
 
-                    if (slider.options.animation === 'fade') {
+                    if (currentAnimation === 'fade') {
                         slider.$slides.css('opacity', 0);
                     }
                 },
@@ -281,9 +289,9 @@
                 },
 
                 setStartSlide: function( index ) {
-                    if (slider.options.animation === 'slide') {
+                    if (currentAnimation === 'slide') {
                         slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2 });
-                    } else if (slider.options.animation === 'fade') {
+                    } else if (currentAnimation === 'fade') {
                         slider.$slides.eq(slider.currentSlide).css({ 'z-index': 2, 'opacity': 1 });
                     }
                 },
@@ -728,7 +736,7 @@
                             //     slider.gesturesData.maximum
                             //     );
 
-                        // if (slider.options.animation === 'slide') {
+                        // if (currentAnimation === 'slide') {
                         //     if (slider.browser.transitions === true) {
                         //         methods.doTranslate(slider.gesturesData.newPosX);
                         //     } else {
@@ -778,7 +786,6 @@
 
                     slider.sliderWidth = width;
 
-                    // methods.shell.updateWidth( slider.sliderWidth );
                     if (newHeight <= startHeight) {
                         if (newHeight >= slider.options.minFullScreenHeight) {
                             methods.shell.updateHeight( newHeight );
@@ -786,8 +793,6 @@
                             methods.shell.updateHeight( slider.options.minFullScreenHeight );
                         }
                     }
-
-                    // methods.shell.setStartOnSlideAnimation( slider.currentSlide );
                 });
             },
 
@@ -869,6 +874,10 @@
                         }
                     }
                 }
+            },
+
+            getRandom: function( min, max ) {
+                return Math.floor( Math.random() * (max - min + 1) + min );
             },
 
             getEmptyTransition: function() {
@@ -956,7 +965,7 @@
                             $currentItem.css(methods.getTransition('transform ' + slider.options.speed + 'ms ' + slider.options.css3easing));
                             $currentItem.css(methods.getTranslate(0));
 
-                            $currentItem.on(transitionEnd, function() {
+                            $currentItem.on(transitionEnd, function onEndTransition() {
                                 slider.off(transitionEnd);
                                 slider.animationStore.onEndAnimate();
                             });
@@ -1003,7 +1012,7 @@
                             $currentItem.css({ 'opacity': 1, 'zIndex': 2 });
                         }, 20);
 
-                        $currentItem.on(transitionEnd, function() {
+                        $currentItem.on(transitionEnd, function onEndTransition() {
                             slider.off(transitionEnd);
                             slider.animationStore.onEndAnimate();
                         });
@@ -1048,7 +1057,7 @@
                     methods.autoPlay.start();
                 }
 
-                if (slider.options.animation === 'slide') {
+                if (currentAnimation === 'slide') {
                     slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTranslate() );
                     slider.$slides.eq(slider.prevSlide).css({ 'zIndex': 1 });
                     slider.$slides.eq(slider.currentSlide).css({ 'zIndex': 2 });
@@ -1084,9 +1093,9 @@
                         methods.kenBurn.reset();
                     }
 
-                    if (slider.options.animation === 'slide') {
+                    if (currentAnimation === 'slide') {
                         this.slideSingleItem(command);
-                    } else if (slider.options.animation === 'fade') {
+                    } else if (currentAnimation === 'fade') {
                         this.fadeSingleItem(command);
                     }
                 }
@@ -1140,7 +1149,8 @@
 
         /**
          * Iterator slides
-         * @param dir - string value
+         *
+         * @param (dir) - string value
          * @return number
          */
         slider.getIndexCalcDir = function( dir ) {
@@ -1217,54 +1227,54 @@
     $.fn.deviora.defaults = {
 
         // Most important dev features
-        namespace: 'dev-',                // String, Integer:
-        slideSelector: '> li',            // String:
-        animation: 'slide',               // String: [slide, fade, random]: ..
-        css3easing: 'ease',               // String:
-        speed: 600,                       // Integer: [0...]:
-        preloadImages: 'visible',         // String: visible, all, false
+        namespace: 'dev-',                // [String, Number] - Namespace slider.
+        slideSelector: '> li',            // [String] -
+        animation: 'slide',               // [String(slide, fade, random)] - ..
+        css3easing: 'ease',               // [String] - ..
+        speed: 600,                       // [Number] - ..
+        preloadImages: 'visible',         // [String(visible, all, false)] - ..
 
         // Mouse Events
-        touch: true,                      // Bool: ..
+        touch: true,                      // [Bool] - ..
 
         // Full Screen
-        fullScreen: false,                // Bool: ..
-        fullScreenOffsetY: 0,             // [jQuery Obj, Int, String]: ..
-        minFullScreenHeight: 0,           // [Int, String]: ..
+        fullScreen: false,                // [Bool] - ..
+        fullScreenOffsetY: 0,             // [jQuery Object, Number, String] - ..
+        minFullScreenHeight: 0,           // [Number, String] - ..
 
         // Keyboard Navigation
-        keyboardControl: true,
+        keyboardControl: true,            // [Bool] - Navigate your slider using left and right keys.
 
         // Auto Play
-        auto: true,                       // Bool: ..
-        autoControls: true,               // Bool: ..
-        autoDelay: 5000,                  // Integer [0...]: ..
-        pauseOnHover: false,              // Bool: ..
+        auto: true,                       // [Bool] - ..
+        autoControls: true,               // [Bool] - ..
+        autoDelay: 5000,                  // [Number] - ..
+        pauseOnHover: false,              // [Bool] - ..
 
         // Pagination
-        directionNav: true,               // Bool: ..
+        directionNav: true,               // [Bool] - ..
 
         // Navigation
-        paginationNav: true,              // Bool: ..
-        navigationText: ['Prev', 'Next'], // Array, Bool [false]: ..
+        paginationNav: true,              // [Bool] - ..
+        navigationText: ['Prev', 'Next'], // [Array, Bool(false)] - ..
 
         // Keyboard
-        keyboardNavigation: true,         // Bool: ..
+        keyboardNavigation: true,         // [Bool] - ..
 
         // Ken Burn
-        kenBurn: false,                   // Bool: Dependency auto()
-        kenBurnType: 'bar',               // String: [bar, circle]
+        kenBurn: false,                   // [Bool] - Dependency auto()
+        kenBurnType: 'bar',               // [String(bar, circle)] -
 
         // Usability Features
-        shuffle: false,                   // Bool: ..
-        startAt: 0,                       // Integer [0...]:
-        smoothHeight: false,              // Bool: ..
-        smoothHeightSpeed: 0,             // [Bool, Int]: ..
-        startHeight: 0,                   // [jQuery Obj, Int, String]: ..
-        responsive: false,                // Bool: ..
+        shuffle: false,                   // [Bool] - ..
+        startAt: 0,                       // [Number] - Integer 0...
+        smoothHeight: false,              // [Bool] - ..
+        smoothHeightSpeed: 0,             // [Bool, Number] - ..
+        startHeight: 0,                   // [jQuery Object, Number, String] - ..
+        responsive: false,                // [Bool] - ..
 
         // Preloader
-        preloader: null,                  // [jQuery Obj, null]
+        preloader: null,                  // [jQuery Obj, null] - ..
 
 
         // Callbacks API

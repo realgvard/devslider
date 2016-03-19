@@ -41,11 +41,12 @@ You don't need any special markup and other other unnecessary CSS classes.
 ### 3. Call the plugin
 Now call the Dev initializer function and your slider is ready.
 
-### 4. For more details visit [Deviora Slider example page](http://livedemo.stickhands.com/DevioraSlider/example/simple.html)
-
 ```html
 $(".deviora-slider").deviora();
 ```
+
+### 4. For more details visit [Deviora Slider example page](http://livedemo.stickhands.com/DevioraSlider/example/simple.html)
+
 
 Licence
 -------------
