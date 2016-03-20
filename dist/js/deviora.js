@@ -702,7 +702,7 @@
 
                         if (locals.dragging !== true && slider.gesturesData.newRelativeX !== 0) {
                             locals.dragging = true;
-                            // TODO: Make callback.
+                            // TODO: Make callback. or not
                         }
 
                         // TODO: check on mobile ! (Only for mobile)
@@ -953,10 +953,9 @@
                         origin *= -1;
                     }
 
+                    slider.animationStore.onStartAnimate();
                     if (slider.browser.transitions) {
                         var transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
-
-                        slider.animationStore.onStartAnimate();
 
                         $currentItem.css(methods.getTranslate( origin ));
                         setTimeout(function() {
@@ -972,7 +971,6 @@
                         }, 20);
 
                     } else {
-                        slider.animationStore.onStartAnimate();
                         $currentItem.css('left', origin).animate({ 'left': 0 }, {
                             duration: slider.options.speed,
                             specialEasing: {
@@ -1000,10 +998,10 @@
                     slider.currentSlide = currentSlide;
                     slider.animating = true;
 
+                    slider.animationStore.onStartAnimate();
                     if (slider.browser.transitions) {
                         var transitionEnd = (slider.pfx) ? slider.pfx + 'TransitionEnd' : 'transitionend';
 
-                        slider.animationStore.onStartAnimate();
                         setTimeout(function() {
                             $currentItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
                             $prevItem.css(methods.getTransition('opacity ' + slider.options.speed + 'ms ' + slider.options.css3easing));
@@ -1017,9 +1015,7 @@
                             slider.animationStore.onEndAnimate();
                         });
                     } else {
-                        slider.animationStore.onStartAnimate();
                         $prevItem.css('zIndex', 1).animate({ 'opacity': 0 }, slider.options.speed, 'swing');
-
                         $currentItem.css('zIndex', 2)
                                     .animate({ 'opacity': 1 }, {
                                         duration: slider.options.speed,
@@ -1042,7 +1038,10 @@
                 slider.$slides.eq(slider.currentSlide).show();
 
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
-                    slider.control.$kenBurnContainer.stop(true).fadeOut(150);
+                    // console.log('wtf');
+                    slider.control.$kenBurnContainer.stop(true).fadeOut(150, function() {
+                        methods.kenBurn.reset();
+                    });
                 }
             },
 
@@ -1089,7 +1088,8 @@
                         cancelAnimationFrame(slider.autoTimeout);
                     }
 
-                    if (slider.options.auto && slider.options.kenBurn) {
+                    // kenBurn
+                    if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'bar') {
                         methods.kenBurn.reset();
                     }
 

@@ -38,7 +38,7 @@ var slider = $('.fullSizeSlider').deviora({
 
     // Ken Burn
     kenBurn: true,                   // Bool: Dependency auto()
-    kenBurnType: 'bar',               // String: [bar, circle]
+    kenBurnType: 'circle',               // String: [bar, circle]
 
     // Usability Features
     shuffle: false,                   // Bool: ..
@@ -60,6 +60,7 @@ var slider = $('.fullSizeSlider').deviora({
     },
 
     devBeforeInit: function() {
+        $('.fullSizeSlider').css('opacity', 0);
         // console.log('dev: devBeforeSlide() - Callback');
     },
 
@@ -72,6 +73,8 @@ var slider = $('.fullSizeSlider').deviora({
     },
 
     devAfterInit: function() {
+        $('.fullSizeSlider').animate({ 'opacity': 1 }, 1200);
+        // $('.fullSizeSlider').css('opacity', 0);
         // console.log('dev: devAfterInit' - Callback);
     }
 
