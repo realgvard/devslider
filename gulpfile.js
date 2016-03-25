@@ -12,7 +12,7 @@ var app = {
 };
 
 gulp.task('sass', function () {
-    gulp.src('assets/sass/scaffold/*.scss')
+    gulp.src('assets/sass/**/*.scss')
         .pipe(sourcemaps.init())
         .pipe(sass.sync().on('error', notify.onError("Error: <%= error.message %>")))
         .pipe(plumber.stop())

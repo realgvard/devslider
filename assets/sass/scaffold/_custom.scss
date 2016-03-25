@@ -1,0 +1,147 @@
+
+$web-font-path: "https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,700" !default;
+
+@font-face {
+    font-family: 'OpenSans';
+    src: url($web-font-path);
+}
+
+/*------------------------------------*\
+    # Scaffold for page
+\*------------------------------------*/
+
+body {
+    font: 16px/22px "OpenSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: $base-font-color;
+}
+
+.ui-header-block {
+    height: 70px;
+    padding: 0 20px;
+
+    h1 {
+        height: inherit;
+        line-height: 70px;
+        margin: 0;
+        font-weight: 600;
+        color: $base-accent-color;
+
+        small {
+            color: $base-primary-color;
+        }
+    }
+}
+.ui-slide-block {
+    width: 100%;
+    height: 100%;
+}
+.ui-content-slider-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #fff;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+
+    &:before {
+        content: '';
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+        margin-left: -5px;
+        height: 100%;
+    }
+}
+.ui-content-slider-text {
+    display: inline-block;
+    vertical-align: middle;
+    background: rgba(0,0,0, 0.3);
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    h3 {
+        margin: 0;
+        font-size: 40px;
+        line-height: 40px;
+        font-weight: 600;
+    }
+}
+.ui-help-text {
+    margin-top: 7px;
+}
+.space40 {
+    height: 40px;
+}
+.space100 {
+    height: 100px;
+}
+
+.ui-main-container {
+    h1 {
+        font-weight: normal;
+        font-size: 48px;
+        line-height: 66px;
+        margin: 80px 0 44px;
+        color: $base-font-color;
+    }
+
+    h2 {
+        font-weight: 600;
+        margin: 22px 0;
+        color: $base-accent-color;
+    }
+
+    p {
+        margin: 0 0 11px;
+        font-weight: 400;
+    }
+
+    .text-emp {
+        color: $base-primary-color;
+        font-weight: 600;
+    }
+}
+a {
+    color: $base-primary-color;
+}
+pre {
+    display: block;
+    padding: 10.5px;
+    margin: 0 0 11px;
+    font-size: 15px;
+    // line-height: 22px;
+    line-height: 0;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre;
+    white-space: pre-wrap;
+    background-color: rgb(245, 245, 245);
+    border: 1px solid rgb(204, 204, 204);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+.table {
+    thead > tr > th,
+    tbody > tr > th,
+    tbody > tr > td {
+        padding: 8px 12px;
+    }
+
+    th {
+        font-size: 16px;
+        color: $base-accent-color;
+    }
+}
+.faq {
+    dt {
+        line-height: 26px;
+    }
+    dd{
+        line-height: 22px;
+        margin-bottom: 20px;
+    }
+}

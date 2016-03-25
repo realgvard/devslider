@@ -31,8 +31,6 @@
             shortNamespace = namespace.replace(/[-|\s]+$/g, ''),
             eventType = "click touchend MSPointerUp keyup",
             pfxCSS3 = null;
-            // TODO: Make short fix focus, when occured slide animation.
-            // focusSlider = false;
             preloadElements = null,
             possibleAnimations = ['slide', 'fade'],
             currentAnimation = '',
@@ -59,7 +57,7 @@
                 slider.control = {};
 
                 if (slider.options.animation === 'random') {
-                    currentAnimation = possibleAnimations[methods.getRandom(0, possibleAnimations.length)];
+                    currentAnimation = possibleAnimations[methods.getRandom(0, possibleAnimations.length - 1)];
                 } else {
                     currentAnimation = slider.options.animation;
                 }
@@ -137,7 +135,6 @@
                     methods.setupResponsive();
                 }
 
-                // TODO: Need check all cases with hover of different components.
                 slider.$wrapper.hover(function onSliderMouseEnter( e ) {
                     if (slider.options.auto && slider.options.pauseOnHover) {
                         if (!slider.animating && !slider.isPaused && !slider.isStopped) slider.pause();
@@ -778,22 +775,22 @@
                 var startWidth = slider.sliderWidth,
                     startHeight = slider.$wrapper.height();
 
-                $(window).resize(function() {
-                    var width = $(this).width(),
-                        // height = $(this).height(),
-                        different = slider.sliderWidth / startWidth * 1.1,
-                        newHeight = startHeight * different;
+                // $(window).resize(function() {
+                //     var width = $(this).width(),
+                //         // height = $(this).height(),
+                //         different = slider.sliderWidth / startWidth * 1.1,
+                //         newHeight = startHeight * different;
 
-                    slider.sliderWidth = width;
+                //     slider.sliderWidth = width;
 
-                    if (newHeight <= startHeight) {
-                        if (newHeight >= slider.options.minFullScreenHeight) {
-                            methods.shell.updateHeight( newHeight );
-                        } else {
-                            methods.shell.updateHeight( slider.options.minFullScreenHeight );
-                        }
-                    }
-                });
+                //     if (newHeight <= startHeight) {
+                //         if (newHeight >= slider.options.minFullScreenHeight) {
+                //             methods.shell.updateHeight( newHeight );
+                //         } else {
+                //             methods.shell.updateHeight( slider.options.minFullScreenHeight );
+                //         }
+                //     }
+                // });
             },
 
             setupKeyboardNavigation: function() {
@@ -948,6 +945,15 @@
                     slider.prevSlide = slider.currentSlide;
                     slider.currentSlide = currentSlide;
                     slider.animating = true;
+
+                    // Change direction depending rules.
+                    if (currentSlide === 0 && slider.direction === 'next') {
+                        slider.direction = 'prev';
+                    }
+                    if (currentSlide === slider.count - 1 && slider.direction === 'prev') {
+                        slider.direction = 'next';
+                    }
+
 
                     if (slider.direction === 'prev') {
                         origin *= -1;
@@ -1198,7 +1204,7 @@
                 return slider.count;
             },
 
-            goToNextSlide: function( index ) {
+            goTo: function( index ) {
                 if (index !== slider.currentSlide) {
                     slider.direction = null;
                     slider.animationStore.execute({ currentSlide: index * 1 });
@@ -1218,7 +1224,7 @@
             if (!$.hasData(this, 'devSliderInit')) {
                 $.data(this, {
                     'devSliderInit': true,
-                    'devioraSlider': new $.deviora(this, options)
+                    'deviora': new $.deviora(this, options)
                 });
             }
         });
@@ -1227,63 +1233,63 @@
     $.fn.deviora.defaults = {
 
         // Most important dev features
-        namespace: 'dev-',                // [String, Number] - Namespace slider.
-        slideSelector: '> li',            // [String] -
-        animation: 'slide',               // [String(slide, fade, random)] - ..
-        css3easing: 'ease',               // [String] - ..
-        speed: 600,                       // [Number] - ..
-        preloadImages: 'visible',         // [String(visible, all, false)] - ..
+        namespace: 'dev-',                // String, Number - Namespace slider.
+        slideSelector: '> li',            // String -
+        animation: 'slide',               // String(slide, fade, random) - ..
+        css3easing: 'ease',               // String - ..
+        speed: 600,                       // Number - ..
+        preloadImages: 'visible',         // String(visible, all, false) - ..
 
         // Mouse Events
-        touch: true,                      // [Bool] - ..
+        touch: true,                      // Bool - ..
 
         // Full Screen
-        fullScreen: false,                // [Bool] - ..
-        fullScreenOffsetY: 0,             // [jQuery Object, Number, String] - ..
-        minFullScreenHeight: 0,           // [Number, String] - ..
+        fullScreen: false,                // Bool - ..
+        fullScreenOffsetY: 0,             // jQuery selector, Number, String - ..
+        minFullScreenHeight: 0,           // Number, String - ..
 
         // Keyboard Navigation
-        keyboardControl: true,            // [Bool] - Navigate your slider using left and right keys.
+        keyboardControl: true,            // Bool - Navigate your slider using left and right keys.
 
         // Auto Play
-        auto: true,                       // [Bool] - ..
-        autoControls: true,               // [Bool] - ..
-        autoDelay: 5000,                  // [Number] - ..
-        pauseOnHover: false,              // [Bool] - ..
+        auto: true,                       // Bool - ..
+        autoControls: true,               // Bool - ..
+        autoDelay: 5000,                  // Number - ..
+        pauseOnHover: false,              // Bool - ..
 
         // Pagination
-        directionNav: true,               // [Bool] - ..
+        directionNav: true,               // Bool - ..
 
         // Navigation
-        paginationNav: true,              // [Bool] - ..
-        navigationText: ['Prev', 'Next'], // [Array, Bool(false)] - ..
+        paginationNav: true,              // Bool - ..
+        navigationText: ['Prev', 'Next'], // Array, Bool(false) - ..
 
         // Keyboard
-        keyboardNavigation: true,         // [Bool] - ..
+        keyboardNavigation: true,         // Bool - ..
 
         // Ken Burn
-        kenBurn: false,                   // [Bool] - Dependency auto()
-        kenBurnType: 'bar',               // [String(bar, circle)] -
+        kenBurn: false,                   // Bool - Dependency auto()
+        kenBurnType: 'bar',               // String(bar, circle) -
 
         // Usability Features
-        shuffle: false,                   // [Bool] - ..
-        startAt: 0,                       // [Number] - Integer 0...
-        smoothHeight: false,              // [Bool] - ..
-        smoothHeightSpeed: 0,             // [Bool, Number] - ..
-        startHeight: 0,                   // [jQuery Object, Number, String] - ..
-        responsive: false,                // [Bool] - ..
+        shuffle: false,                   // Bool - ..
+        startAt: 0,                       // Number - Integer 0...
+        smoothHeight: false,              // Bool - ..
+        smoothHeightSpeed: 0,             // Bool, Number - ..
+        startHeight: 0,                   // jQuery selector, Number, String - ..
+        responsive: false,                // Bool - ..
 
         // Preloader
-        preloader: null,                  // [jQuery Obj, null] - ..
+        preloader: null,                  // jQuery Obj, null - ..
 
 
         // Callbacks API
-        devBeforeInit:  function( element ) {},  // API: Callback on ..
-        devAfterInit:   function( element ) {},  // API: Callback on ..
-        devBeforeSlide: function( data )    {},  // API: Callback on ..
-        devAfterSlide:  function( data )    {},  // API: Callback on ..
-        devOnPause:     function( data )    {},  // API: Callback on ..
-        devOnPlay:      function( data )    {}   // API: Callback on ..
+        devBeforeInit:  function( element ) {},  // API: Before initialization callback.
+        devAfterInit:   function( element ) {},  // API: After initialization callback.
+        devBeforeSlide: function( data )    {},  // API: Before move callback.
+        devAfterSlide:  function( data )    {},  // API: After move callback.
+        devOnPause:     function( data )    {},  // API: Call this function while pressed pause.
+        devOnPlay:      function( data )    {}   // API: Call this function while pressed play.
     };
 
 })(jQuery, window, document, undefined);

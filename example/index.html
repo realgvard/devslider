@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DevioraSlider</title>
+  <link rel="stylesheet" href="../dist/css/scaffold/bootstrap.css">
+  <link rel="stylesheet" href="../dist/css/style.css">
+</head>
+<body>
+
+    <div class="ui-header-block">
+        <h1>Deviora <small>slider</small></h1>
+    </div>
+
+    <ul class="fullSizeSlider">
+        <li>
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_1.jpg" alt="">
+            </div>
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>Deviora Slider</h3>
+                    <div class="ui-help-text">Make simple things together</div>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_2.jpg" alt="">
+            </div>
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>Ken burns</h3>
+                    <div class="ui-help-text">In a smooth way</div>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="ui-slide-block">
+                <img src="../dist/img/image_3.jpg" alt="">
+            </div>
+            <div class="ui-content-slider-block">
+                <div class="ui-content-slider-text">
+                    <h3>All these features</h3>
+                    <div class="ui-help-text">Much more!</div>
+                </div>
+            </div>
+        </li>
+    </ul>
+
+    <div class="ui-main-container">
+        <div class="container">
+            <div class="space40"></div>
+            <h1>Customizing</h1>
+
+            <h2>1. Options</h2>
+            <p>All of the options below are available to customize Deviora Slider.</p>
+            <table class="table table-condensed">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Default</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class='text-emp'>namespace</th>
+                        <td>"dev-"</td>
+                        <td>String / Number.</td>
+                        <td>Namespace slider.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>slideSelector</th>
+                        <td>"> li"</td>
+                        <td>String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>animation</th>
+                        <td>"slide"</td>
+                        <td>String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>css3easing</th>
+                        <td>"ease"</td>
+                        <td>String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>speed</th>
+                        <td>600</td>
+                        <td>Number</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>preloadImages</th>
+                        <td>"visible"</td>
+                        <td>String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>touch</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>fullScreen</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>fullScreenOffsetY</th>
+                        <td>0</td>
+                        <td>jQuery selector / Number / String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>minFullScreenHeight</th>
+                        <td>0</td>
+                        <td>Number / String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>keyboardControl</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>auto</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>autoControls</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>autoDelay</th>
+                        <td>5000</td>
+                        <td>Number</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>pauseOnHover</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>directionNav</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>paginationNav</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>navigationText</th>
+                        <td>["Prev", "Next"]</td>
+                        <td>Array / Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>keyboardNavigation</th>
+                        <td>true</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>kenBurn</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>kenBurnType</th>
+                        <td>"bar"</td>
+                        <td>String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>shuffle</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>startAt</th>
+                        <td>0</td>
+                        <td>Number</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>smoothHeight</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>smoothHeightSpeed</th>
+                        <td>0</td>
+                        <td>Bool / Number</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>startHeight</th>
+                        <td>0</td>
+                        <td>jQuery Object / Number / String</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>responsive</th>
+                        <td>false</td>
+                        <td>Bool</td>
+                        <td>..</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>preloader</th>
+                        <td>null</td>
+                        <td>jQuery selector / null</td>
+                        <td>..</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>2. Callbacks</h2>
+            <table class="table table-condensed">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Default</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class='text-emp'>devBeforeInit</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>Before initialization callback.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>devAfterInit</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>After initialization callback.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>devBeforeSlide</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>Before move callback.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>devAfterSlide</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>After move callback.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>devOnPause</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>Call this function while pressed pause.</td>
+                    </tr>
+                    <tr>
+                        <th class='text-emp'>devOnPlay</th>
+                        <td>false</td>
+                        <td>function</td>
+                        <td>Call this function while pressed play.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>3. Deviora Data methods</h2>
+            <p>To use Deviora Slider $.data use delegate function.</p>
+
+            <pre class="pre-show prettyprint linenums">
+                <ol class="linenums">
+                    <li><span class="com">// Initialize Plugin</span></li>
+                    <li><span class="pln">$</span><span class="pun">(</span><span class="str">".deviora-slider"</span><span
+                            class="pun">).</span><span class="pln">deviora</span><span class="pun">();</span></li>
+                    <li><span class="pln">&nbsp;</span></li>
+                    <li><span class="com">// Get slider instance data and store it in variable dev</span></li>
+                    <li><span class="kwd">var</span><span class="pln"> dev </span><span class="pun">=</span><span
+                            class="pln"> $</span><span class="pun">(</span><span class="str">".deviora-slider"</span><span
+                            class="pun">).</span><span class="pln">data</span><span class="pun">(</span><span
+                            class="str">'deviora'</span><span class="pun">);</span></li>
+                    <li><span class="pln">&nbsp;</span></li>
+                    <li><span class="com">// Public methods</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="kwd">nextSlide</span><span class="pun">()</span><span
+                            class="pln">   </span><span class="com">// Go to next slide</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="kwd">prevSlide</span><span class="pun">()</span><span
+                            class="pln">   </span><span class="com">// Go to prev slide</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="pln">goTo</span><span
+                            class="pun">(</span><span class="pln">index</span><span class="pun">)</span><span class="pln">  </span><span class="com"> // Go to index</span></li>
+                    <li><span class="pln">&nbsp;</span></li>
+                    <li><span class="com">// Get methods</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="pln">getCurrentIndex</span><span class="pun">(</span><span class="pun">)</span><span class="pln">  </span><span
+                            class="com">// Get current index slide</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="pln">getSlidesCount</span><span class="pun">(</span><span class="pun">)</span><span class="pln">  </span><span
+                            class="com"> // Get length slides</span></li>
+                    <li><span class="pln">&nbsp;</span></li>
+                    <li><span class="com">// Auto Play</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="pln">play</span><span class="pun">()</span><span
+                            class="pln"> </span><span class="com"> // Autoplay Play</span></li>
+                    <li><span class="pln">dev</span><span class="pun">.</span><span class="pln">pause</span><span class="pun">()</span><span
+                            class="pln"> </span><span class="com">// Autoplay Stop</span></li>
+                </ol>
+            </pre>
+        </div>
+
+        <div class="container faq">
+            <h1>FAQ</h1>
+            <dl>
+                <dt>Can i use it for free?</dt>
+                <dd>Yes!</dd>
+                <dt>Can i use it for ecommerce?</dt>
+                <dd>Yes!</dd>
+                <dt>Has it any licence?</dt>
+                <dd>MIT</dd>
+                <dt>Can i ask for a new functionality?</dt>
+                <dd>Yes! Use <a href="http://github.com/realgvard/devslider">Github</a></dd>
+                <dt>I need help!</dt>
+                <dd>Send me an <a href="mailto:realgvard@gmail.com?subject=Hey Deviora slider! I need help">email</a>, visit <a href="http://github.com/realgvard/devslider">Github</a> or add comment <a href="#disqus">below.</a><br>Don't forget to add link to your demo/example website!</dd>
+                <!-- <dt>Does it has infinity scroll/circle/loop slides?</dt>
+                <dd>Only new version 2.x.x has it. <a href="http://www.owlgraphic.com/owlcarousel2/">Check it</a></dd>
+                <dt>What's new in latest release?</dt>
+                <dd>See <a href="changelog.html">Changelog</a></dd> -->
+            </dl>
+        </div>
+
+        <div class="space40"></div>
+    </div>
+
+
+
+
+    <script src="../assets/js/jquery.min.js"></script>
+    <script src="../dist/js/deviora.js"></script>
+    <script src="../dist/js/loader.js"></script>
+</body>
+</html>

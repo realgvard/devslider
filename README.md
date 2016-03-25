@@ -1,7 +1,7 @@
-##New version 1.0.0 - beta now avaliable for testers. [Check it](http://livedemo.stickhands.com/DevioraSlider/example/simple.html)
+##New version 1.0.0 - beta now avaliable for testers. [Check it](http://livedemo.stickhands.com/DevioraSlider/example/index.html)
 
 ### Deviora slider ###
->[Deviora.js](http://livedemo.stickhands.com/DevioraSlider/example/simple.html) is a simple jQuery full size slider with animation effects.
+>[Deviora.js](http://livedemo.stickhands.com/DevioraSlider/example/index.html) is a simple jQuery full size slider with animation effects.
 
 ###Features:
 * Responsive
@@ -45,7 +45,7 @@ Now call the Dev initializer function and your slider is ready.
 $(".deviora-slider").deviora();
 ```
 
-### 4. For more details visit [Deviora Slider example page](http://livedemo.stickhands.com/DevioraSlider/example/simple.html)
+### 4. For more details visit [Deviora Slider example page](http://livedemo.stickhands.com/DevioraSlider/example/index.html)
 
 
 Licence

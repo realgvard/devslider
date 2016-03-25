@@ -78,7 +78,7 @@ var slider = $('.fullSizeSlider').deviora({
         // console.log('dev: devAfterInit' - Callback);
     }
 
-}).data('devioraSlider');
+}).data('deviora');
 
 
 

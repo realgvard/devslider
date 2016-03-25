@@ -1,3 +1,9 @@
-@import "base/reset.scss";
-@import "base/main.scss";
-@import "base/style.scss";
+@import "variables";
+
+
+// Scaffold
+@import "scaffold/custom";
+
+// Base
+@import "base/prettify";
+@import "base/slider";
