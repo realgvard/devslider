@@ -83,7 +83,7 @@
                 }
 
                 // Start build shell slider
-                methods.shell.wrapup();
+                methods.shell.wrapupShell();
 
                 // Direction Nav:
                 if (slider.options.directionNav) methods.directionNav.setup();
@@ -158,6 +158,8 @@
             },
 
             start: function() {
+                methods.shell.wrapupMainImages();
+
                 // Remove preloader
                 if(!!slider.options.preloadImages && preloader !== null) {
                     preloader.fadeOut(500, function() {
@@ -176,8 +178,6 @@
 
                 // API: After init - Callback
                 slider.options.devAfterInit();
-
-                // console.log(slider);
             },
 
             shell: {
@@ -270,7 +270,7 @@
                 },
 
                 // Build our slider with HTML
-                wrapup: function() {
+                wrapupShell: function() {
                     slider.$wrapper =
                         $('<div class="' + namespace + 'wrapper"></div>');
                     slider.$viewport =
@@ -283,6 +283,44 @@
                     });
 
                     slider.$wrapper.append( slider.$viewport );
+                },
+
+                wrapupMainImages: function() {
+                    slider.$slides.find('> img').each(function() {
+                        var $img       = $(this),
+                            bgposition = $img.data('bgposition'),
+                            bgrepeat   = $img.data('bgrepeat'),
+                            bgfit      = $img.data('bgfit'),
+                            src        = $img.attr('src');
+
+
+                        // Wrap each image in div
+                        $img.wrap('<div class="slotholder" style="position: absolute; top: 0; left: 0; z-index: 1; width:100%; height:100%;"'+
+                                  'data-bgposition="' + $img.data("bgposition") + '"'+
+                                  'data-bgrepeat="'   + $img.data("bgrepeat") + '"'+
+                                  'data-bgfit="'      + $img.data("bgfit") + '"'+
+                                  '></div>');
+
+                        if (bgposition === undefined) bgposition = 'center center';
+                        if (bgrepeat === undefined) bgrepeat     = 'no-repeat';
+                        if (bgfit === undefined) bgfit           = 'cover';
+
+                        // Replace img at div
+                        $img.replaceWith(
+                            '<div class="' + namespace + 'defaultImg ' + $img.attr('class') + '"' +
+                                'data-bgfit="'       + bgfit +  ';"' +
+                                'data-bgposition="'  + bgposition + ';" ' +
+                                'data-bgrepeat="'    + bgrepeat + ';"' +
+                                'data-src="'         + src + ';"' +
+                                'style="background-color:'     + $img.css("backgroundColor") + ';' +
+                                      'background-repeat:'     + bgrepeat + ';' +
+                                      'background-image: url(' + src + ');' +
+                                      'background-size:'       + bgfit + ';' +
+                                      'background-position:'   + bgposition + ';' +
+                                      'width: 100%;' +
+                                      'height: 100%;">' +
+                            '</div>');
+                    });
                 },
 
                 setStartSlide: function( index ) {
@@ -1044,8 +1082,7 @@
                 slider.$slides.eq(slider.currentSlide).show();
 
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
-                    // console.log('wtf');
-                    slider.control.$kenBurnContainer.stop(true).fadeOut(150, function() {
+                    slider.control.$kenBurnContainer.stop(true).fadeOut(250, function() {
                         methods.kenBurn.reset();
                     });
                 }
@@ -1072,7 +1109,7 @@
                 slider.$slides.eq(slider.currentSlide).css( methods.getEmptyTransition() );
 
                 if (slider.options.auto && slider.options.kenBurn && slider.options.kenBurnType === 'circle') {
-                    slider.control.$kenBurnContainer.stop(true).fadeIn(250);
+                    slider.control.$kenBurnContainer.stop(true).fadeIn(350);
                 }
 
                 // API: After slide - Callback
@@ -1244,7 +1281,7 @@
         touch: true,                      // Bool - ..
 
         // Full Screen
-        fullScreen: false,                // Bool - ..
+        fullScreen: true,                 // Bool - ..
         fullScreenOffsetY: 0,             // jQuery selector, Number, String - ..
         minFullScreenHeight: 0,           // Number, String - ..
 
@@ -1268,7 +1305,7 @@
         keyboardNavigation: true,         // Bool - ..
 
         // Ken Burn
-        kenBurn: false,                   // Bool - Dependency auto()
+        kenBurn: true,                    // Bool - Dependency auto()
         kenBurnType: 'bar',               // String(bar, circle) -
 
         // Usability Features
@@ -1277,6 +1314,7 @@
         smoothHeight: false,              // Bool - ..
         smoothHeightSpeed: 0,             // Bool, Number - ..
         startHeight: 0,                   // jQuery selector, Number, String - ..
+        // TODO: make works.
         responsive: false,                // Bool - ..
 
         // Preloader

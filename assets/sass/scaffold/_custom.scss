@@ -15,6 +15,11 @@ body {
     color: $base-font-color;
 }
 
+.fullSizeSlider {
+    > li {
+        position: relative;
+    }
+}
 .ui-header-block {
     height: 70px;
     padding: 0 20px;
@@ -31,14 +36,11 @@ body {
         }
     }
 }
-.ui-slide-block {
-    width: 100%;
-    height: 100%;
-}
 .ui-content-slider-block {
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 2;
     color: #fff;
     height: 100%;
     width: 100%;
