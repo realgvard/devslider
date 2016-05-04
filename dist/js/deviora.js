@@ -702,9 +702,6 @@
                             return false;
                         }
 
-                        // block drag img element, TODO: need disable or not ?
-                        // e.preventDefault();
-
                         if (slider.options.auto !== false) {
                             slider.pause();
                         }
@@ -763,6 +760,7 @@
                         };
 
                         slider.gesturesData.newPosX = Math.max(Math.min(slider.gesturesData.newPosX, minSwipe()), maxSwipe());
+                        // debug
                             // console.log(
                             //     ' newPosX: ' + slider.gesturesData.newPosX + '\n',
                             //     'minSwipe(): ' + minSwipe() + '\n',
@@ -770,14 +768,6 @@
                             //     'newRelativeX: ' + slider.gesturesData.newRelativeX + '\n',
                             //     slider.gesturesData.maximum
                             //     );
-
-                        // if (currentAnimation === 'slide') {
-                        //     if (slider.browser.transitions === true) {
-                        //         methods.doTranslate(slider.gesturesData.newPosX);
-                        //     } else {
-                        //         methods.doCss2move(slider.gesturesData.newPosX);
-                        //     }
-                        // }
                     }
 
                     function onTouchEnd( event ) {
@@ -808,7 +798,6 @@
                 }
             },
 
-            // TODO: Improve this method.
             setupResponsive: function() {
                 var startWidth = slider.sliderWidth,
                     startHeight = slider.$wrapper.height();
@@ -964,8 +953,13 @@
         /*------------------------------------*\
           - PUBLIC METHODS -
         \*------------------------------------*/
-        // Group animations in one object
-        // TODO: Remake this method such as Decorator.
+
+        /**
+         * Group animations in one object
+         *
+         * @todo Remake this method such as Decorator.
+         * @type {Object}
+         */
         slider.animationStore = {
             forceUpdate: false,
 
@@ -1118,7 +1112,7 @@
 
 
             /**
-             * Description: call objects which encapsulate actions and parameters.
+             * Call objects which encapsulate actions and parameters.
              *
              * @pattern - commander
              */
@@ -1179,6 +1173,9 @@
             methods.switchStateStartAndPause();
         };
 
+        /**
+         * Setup smooth change height for current slide.
+         */
         slider.setSmoothHeight = function() {
             slider.$viewport.animate({
                 'height': slider.$slides.eq(slider.currentSlide).height()
@@ -1193,8 +1190,8 @@
         /**
          * Iterator slides
          *
-         * @param (dir) - string value
-         * @return number
+         * @param {String} dir - string value, 'prev' or 'next'.
+         * @return {Number} - get current index.
          */
         slider.getIndexCalcDir = function( dir ) {
             slider.direction = dir;
@@ -1314,7 +1311,8 @@
         smoothHeight: false,              // Bool - ..
         smoothHeightSpeed: 0,             // Bool, Number - ..
         startHeight: 0,                   // jQuery selector, Number, String - ..
-        // TODO: make works.
+
+        // TODO: make works, at this time disabled.
         responsive: false,                // Bool - ..
 
         // Preloader
