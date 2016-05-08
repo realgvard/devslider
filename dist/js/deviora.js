@@ -46,6 +46,9 @@
           - PRIVATE METHODS -
         \*------------------------------------*/
         methods = {
+            /**
+             * @constructor
+             */
             init: function() {
 
                 // Get current slide and make sure it is a number
@@ -180,6 +183,10 @@
                 slider.options.devAfterInit();
             },
 
+            /**
+             * Control wrapper slider.
+             * @type {Object}
+             */
             shell: {
                 // Setup default styles
                 setup: function() {
@@ -508,6 +515,7 @@
                 setup: function() {
                     var $kenBurnContainer;
 
+                    // 1 type
                     if (slider.options.kenBurnType === 'bar') {
                         $kenBurnContainer = $('<div class="' + namespace + 'ken-burn-wrapper">' +
                                                 '<div class="' + namespace + 'ken-burn-progress"></div>' +
@@ -515,6 +523,7 @@
                         slider.control.$kenBurn = $kenBurnContainer.find('.' + namespace + 'ken-burn-progress');
                     }
 
+                    // 2 type
                     if (slider.options.kenBurnType === 'circle') {
                         $kenBurnContainer = $('<div class="' + namespace + 'circle-timer"> ' +
                                                 '<div class="' + namespace + 'ct-left"> ' +
@@ -623,18 +632,22 @@
                 };
             },
 
+            /**
+             * Gestures for mobile swipes, moves, slides.
+             * @type {Object}
+             */
             gestures: {
                 setupEvents: function() {
                     var locals = {
                         offsetX       : 0,
                         offsetY       : 0,
-                        baseElWidth   : 0,
+                        // baseElWidth   : 0,
                         relativePos   : 0,
                         position      : null,
                         minSwipe      : null,
                         maxSwipe      : null,
                         sliding       : null,
-                        dargging      : null,
+                        // dragging      : null,
                         targetElement : null
                     };
 
@@ -798,26 +811,14 @@
                 }
             },
 
+            /**
+             * todo: Make responsive
+             */
             setupResponsive: function() {
                 var startWidth = slider.sliderWidth,
                     startHeight = slider.$wrapper.height();
 
-                // $(window).resize(function() {
-                //     var width = $(this).width(),
-                //         // height = $(this).height(),
-                //         different = slider.sliderWidth / startWidth * 1.1,
-                //         newHeight = startHeight * different;
-
-                //     slider.sliderWidth = width;
-
-                //     if (newHeight <= startHeight) {
-                //         if (newHeight >= slider.options.minFullScreenHeight) {
-                //             methods.shell.updateHeight( newHeight );
-                //         } else {
-                //             methods.shell.updateHeight( slider.options.minFullScreenHeight );
-                //         }
-                //     }
-                // });
+                // code here ..
             },
 
             setupKeyboardNavigation: function() {
@@ -847,12 +848,18 @@
                 }
             },
 
+            /**
+             * Lazy upload images. When we are fully upload all of elements we can start work.
+             * @param  {Object}   elements - html collection node elements.
+             * @param  {Function} callback - uses like callback after upload all elements.
+             * @return Void
+             */
             loadElements: function( elements, callback ) {
                 var total = slider.find(elements).length,
                     count = 0,
                     timer;
 
-                // Append preloader
+                // Append preloader in viewport
                 if(!!slider.options.preloadImages) {
                     timer = setTimeout(function() {
                         preloader = slider.options.preloader || $('<div class="' + namespace + 'preloader"></div>');
@@ -1202,7 +1209,9 @@
             }
         };
 
-        // It's method can be use in inside own slider.
+        /**
+         * It's method can be use in inside own slider.
+         */
         publickMethods = {
             nextSlide: function() {
                 var target = slider.getIndexCalcDir('next');
@@ -1253,6 +1262,10 @@
         return publickMethods;
     }
 
+    /**
+     * Creates a new deviora.
+     * @class
+     */
     $.fn.deviora = function( options ) {
         return this.each(function () {
             if (!$.hasData(this, 'devSliderInit')) {
