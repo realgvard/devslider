@@ -6,12 +6,13 @@ var notify       = require('gulp-notify');
 var plumber      = require('gulp-plumber');
 var autoprefixer = require('gulp-autoprefixer');
 var sourcemaps   = require('gulp-sourcemaps');
+var minify       = require('gulp-minify');
 
 var app = {
     pub: ''
 };
 
-gulp.task('sass', function () {
+gulp.task('compress', function () {
     gulp.src('assets/sass/**/*.scss')
         .pipe(sourcemaps.init())
         .pipe(sass.sync().on('error', notify.onError("Error: <%= error.message %>")))
@@ -25,8 +26,19 @@ gulp.task('sass', function () {
         }))
         .pipe(sourcemaps.write('./maps'))
         .pipe(gulp.dest('dist/css'));
+
+    gulp.src('assets/js/*.js')
+      .pipe(minify({
+          ext:{
+              src:'.js',
+              min:'.min.js'
+          },
+          exclude: ['tasks'],
+          ignoreFiles: ['-min.js']
+      }))
+      .pipe(gulp.dest('assets/js'));
 });
 
-gulp.task('dev', ['sass'], function () {
-    gulp.watch('assets/sass/**/*.scss', ['sass']);
+gulp.task('dev', ['compress'], function () {
+    gulp.watch('assets/sass/**/*.scss', ['compress']);
 });
