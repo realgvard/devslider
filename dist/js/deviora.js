@@ -79,7 +79,7 @@
 
                 methods.checkBrowser();
 
-                // Shuffle:
+                // Shuffle
                 if (slider.options.shuffle) {
                     slider.$slides.sort(function() { return (Math.round(Math.random()) - 0.5) });
                     slider.empty().append(slider.$slides);
@@ -88,18 +88,19 @@
                 // Start build shell slider
                 methods.shell.wrapupShell();
 
-                // Direction Nav:
+                // Direction Nav
                 if (slider.options.directionNav) methods.directionNav.setup();
 
-                // Control Nav:
+                // Control Nav
                 if (slider.options.paginationNav) methods.paginationNav.setup();
 
-                // Auto Controls:
+                // Auto Controls
                 if (slider.options.auto && slider.options.autoControls) methods.autoControls.setup();
 
-                // Ken Burn:
+                // Ken Burn
                 if (slider.options.auto && slider.options.kenBurn) methods.kenBurn.setup();
 
+                // Preload Images
                 if(!!slider.options.preloadImages) {
                     if (slider.options.preloadImages === 'visible') {
                         preloadElements = slider.$slides.eq(slider.currentSlide);
@@ -855,7 +856,7 @@
 
             /**
              * Lazy upload images. When we are fully upload all of elements we can start work.
-             * @param  {Object}   elements - html collection node elements.
+             * @param  {Element}  elements - html collection node elements.
              * @param  {Function} callback - uses like callback after upload all elements.
              * @return Void
              */
@@ -883,6 +884,7 @@
                     $(this).one('load', function() {
                         count += 1;
 
+                        // Last loop
                         if(count === total) {
                             window.removeEventListener('error', onErrorEvent, true);
                             preloadElements = null;
@@ -968,7 +970,6 @@
 
         /**
          * Group animations in one object
-         * @todo Remake this method such as Decorator.
          * @type {Object}
          */
         slider.animationStore = {
