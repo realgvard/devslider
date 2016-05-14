@@ -152,7 +152,7 @@
                     methods.shell.onMouseLeave();
                 });
 
-                // define load images
+                // Define load images
                 if(!!slider.options.preloadImages) {
                     methods.loadElements(preloadElements, methods.start);
                 } else {
@@ -184,7 +184,7 @@
             },
 
             /**
-             * Control wrapper slider.
+             * Control and logic wrapper slider.
              * @type {Object}
              */
             shell: {
@@ -352,7 +352,9 @@
                         });
                 },
 
-                // TODO: Improvement updateHeight() on resize, and init.
+                /**
+                 * @todo  Improvement updateHeight() on resize, and init.
+                 */
                 updateHeight: function( value ) {
                     // if (value >= slider.options.minFullScreenHeight) {
                         slider.$wrapper.height( value );
@@ -477,8 +479,10 @@
             },
 
             autoPlay: {
+                /** @access public */
                 spendTime: null,
 
+                /** @access public */
                 startTime: null,
 
                 start: function() {
@@ -503,13 +507,14 @@
                     }
                 },
 
-                setLastDate: function() {
+                setLastData: function() {
                     methods.autoPlay.startTime = Date.now() - methods.autoPlay.spendTime;
                     methods.autoPlay.run();
                 }
             },
 
             kenBurn: {
+                /** @access private */
                 progress: 0,
 
                 setup: function() {
@@ -963,11 +968,12 @@
 
         /**
          * Group animations in one object
-         *
          * @todo Remake this method such as Decorator.
          * @type {Object}
          */
         slider.animationStore = {
+
+            /** @access public */
             forceUpdate: false,
 
             slideSingleItem: function( params ) {
@@ -1075,6 +1081,10 @@
                 }
             },
 
+            /**
+             * Callback on eacn start slide animation.
+             * @callback
+             */
             onStartAnimate: function() {
                 if (slider.options.smoothHeight) {
                     slider.setSmoothHeight();
@@ -1089,6 +1099,10 @@
                 }
             },
 
+            /**
+             * Callback on eacn end slide animation.
+             * @callback
+             */
             onEndAnimate: function() {
                 slider.animationStore.forceUpdate = false;
                 slider.animating = false;
@@ -1120,8 +1134,6 @@
 
             /**
              * Call objects which encapsulate actions and parameters.
-             *
-             * @pattern - commander
              */
             execute: function( command ) {
                 if (slider.isPaused && slider.initialized && slider.animationStore.forceUpdate ||
@@ -1174,7 +1186,7 @@
             slider.isStopped = false;
 
             if (slider.options.auto) {
-                methods.autoPlay.setLastDate();
+                methods.autoPlay.setLastData();
             }
 
             methods.switchStateStartAndPause();
@@ -1196,7 +1208,6 @@
 
         /**
          * Iterator slides
-         *
          * @param {String} dir - string value, 'prev' or 'next'.
          * @return {Number} - get current index.
          */
@@ -1210,7 +1221,8 @@
         };
 
         /**
-         * It's method can be use in inside own slider.
+         * This method can be use in inside own slider.
+         * @public
          */
         publickMethods = {
             nextSlide: function() {

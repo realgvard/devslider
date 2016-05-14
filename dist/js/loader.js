@@ -1,5 +1,7 @@
 
 
+// EXAMPLE 1
+
 var slider = $('.fullSizeSlider').deviora({
     fullScreenOffsetY: $('.ui-header-block'),
     devBeforeInit: function() {
