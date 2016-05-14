@@ -27,16 +27,16 @@ gulp.task('compress', function () {
         .pipe(sourcemaps.write('./maps'))
         .pipe(gulp.dest('dist/css'));
 
-    gulp.src('assets/js/*.js')
-      .pipe(minify({
-          ext:{
-              src:'.js',
-              min:'.min.js'
-          },
-          exclude: ['tasks'],
-          ignoreFiles: ['-min.js']
-      }))
-      .pipe(gulp.dest('assets/js'));
+    // gulp.src('assets/js/*.js')
+    //   .pipe(minify({
+    //       ext:{
+    //           src:'.js',
+    //           min:'.min.js'
+    //       },
+    //       exclude: ['tasks'],
+    //       ignoreFiles: ['-min.js']
+    //   }))
+    //   .pipe(gulp.dest('assets/js'));
 });
 
 gulp.task('dev', ['compress'], function () {
